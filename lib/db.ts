@@ -1,16 +1,20 @@
-import { Pool } from "pg";
+import { Client, type QueryResult, type QueryResultRow } from "pg";
 
-const globalForDb = globalThis as unknown as { pool?: Pool };
+import { getDbOptions, getSession } from "./session";
 
-const sslMode = process.env.DATABASE_URL?.match(/[?&]sslmode=([^&]+)/)?.[1];
-
-export const db =
-  globalForDb.pool ??
-  new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: sslMode === "disable" ? false : { rejectUnauthorized: false },
-  });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForDb.pool = db;
+export async function query<T extends QueryResultRow = QueryResultRow>(
+  sql: string,
+  params?: unknown[]
+): Promise<QueryResult<T>> {
+  const session = await getSession();
+  if (!session) {
+    throw new Error("Not authenticated");
+  }
+  const client = new Client(getDbOptions(session));
+  await client.connect();
+  try {
+    return await client.query<T>(sql, params);
+  } finally {
+    await client.end();
+  }
 }
