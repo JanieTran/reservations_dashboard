@@ -52,7 +52,6 @@ const KPI_SQL = `
     SELECT
       BK.status
       ,BK.number_of_people
-      ,BK.dine_in_type
       ,BK.reserved_at + INTERVAL '7 hours' AS reserved_at
       ,CASE
         WHEN DATE(reserved_at + INTERVAL '7 hours')
@@ -145,6 +144,8 @@ function toKpiPeriod(row: KpiRow): KpiPeriod {
  * aggregated SQL query. Missing periods are returned zeroed.
  */
 export async function getKpiData(range: DateRange): Promise<KpiData> {
+  // The range ends are the inclusive last days of each period, matching the
+  // SQL's inclusive BETWEEN.
   const rows = (
     await query<KpiRow>(KPI_SQL, [
       toDateKey(range.currentStart),
