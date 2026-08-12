@@ -10,6 +10,12 @@ export interface Delta {
 
 export type DeltaKind = "percent" | "points";
 
+/**
+ * Computes a human-readable delta between a current and previous value.
+ * Counts compare as percentage change, rates as percentage-point change;
+ * tone follows the direction and whether an increase is considered good.
+ * Returns a neutral dash when the previous value is missing or zero.
+ */
 export function buildDelta(
   current: number,
   previous: number,

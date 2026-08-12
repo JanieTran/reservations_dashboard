@@ -1,8 +1,15 @@
 import { redirect } from "next/navigation";
 
-import KpiCard from "@/components/dashboard/kpi-card";
+import KpiGrid from "@/components/dashboard/kpi-grid";
 import { Button } from "@/components/ui/button";
-import { getKpiData, getKpiItems } from "@/lib/queries/kpis";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { getKpiData, type KpiData } from "@/lib/queries/kpis";
 import { getDefaultDateRange } from "@/lib/ranges";
 import { getSession } from "@/lib/session";
 
@@ -12,7 +19,12 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const kpiItems = getKpiItems(await getKpiData(getDefaultDateRange()));
+  let kpiData: KpiData | null;
+  try {
+    kpiData = await getKpiData(getDefaultDateRange());
+  } catch {
+    kpiData = null;
+  }
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-6 p-8">
@@ -26,11 +38,22 @@ export default async function DashboardPage() {
           </Button>
         </form>
       </header>
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {kpiItems.map((item) => (
-          <KpiCard key={item.label} {...item} />
-        ))}
-      </section>
+      {kpiData ? (
+        <KpiGrid data={kpiData} />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Unable to load dashboard data</CardTitle>
+            <CardDescription>
+              Could not connect to the database. Check that DATABASE_HOST and
+              DATABASE_NAME are set, then try again.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            The KPI summary will appear here once the connection succeeds.
+          </CardContent>
+        </Card>
+      )}
     </main>
   );
 }

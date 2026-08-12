@@ -18,6 +18,9 @@ interface SessionPayload extends DbCredentials {
   exp: number;
 }
 
+/**
+ * Derives the AES-256-GCM key from AUTH_SECRET via SHA-256.
+ */
 function getKey(): Buffer {
   const secret = process.env.AUTH_SECRET;
   if (!secret) {
@@ -26,6 +29,10 @@ function getKey(): Buffer {
   return createHash("sha256").update(secret).digest();
 }
 
+/**
+ * Builds a Postgres connection string from the given credentials and the
+ * DATABASE_HOST, DATABASE_PORT, and DATABASE_NAME environment variables.
+ */
 export function buildConnectionString({
   username,
   password,
@@ -41,6 +48,10 @@ export function buildConnectionString({
   return `postgres://${user}:${pass}@${host}:${port}/${database}`;
 }
 
+/**
+ * Returns pg Client options for a connection, disabling SSL entirely when
+ * DATABASE_SSL=disable, otherwise accepting self-signed certificates.
+ */
 export function getDbOptions(credentials: DbCredentials): {
   connectionString: string;
   ssl: false | { rejectUnauthorized: boolean };
@@ -54,6 +65,10 @@ export function getDbOptions(credentials: DbCredentials): {
   };
 }
 
+/**
+ * Encrypts the session credentials with AES-256-GCM and returns a
+ * base64url-encoded token containing the IV, auth tag, and ciphertext.
+ */
 export function encryptSession(credentials: DbCredentials): string {
   const key = getKey();
   const iv = randomBytes(12);
@@ -70,6 +85,10 @@ export function encryptSession(credentials: DbCredentials): string {
   return [iv, authTag, encrypted].map((b) => b.toString("base64url")).join(".");
 }
 
+/**
+ * Decrypts a session token, returning its payload, or null if the token is
+ * invalid, tampered with, or expired.
+ */
 export function decryptSession(token: string): SessionPayload | null {
   try {
     const [ivB64, tagB64, dataB64] = token.split(".");
@@ -93,6 +112,9 @@ export function decryptSession(token: string): SessionPayload | null {
   }
 }
 
+/**
+ * Reads and decrypts the session cookie, returning null when absent.
+ */
 export async function getSession(): Promise<SessionPayload | null> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
@@ -100,6 +122,9 @@ export async function getSession(): Promise<SessionPayload | null> {
   return decryptSession(token);
 }
 
+/**
+ * Sets an HttpOnly session cookie for the given credentials, lasting 7 days.
+ */
 export async function setSession(credentials: DbCredentials): Promise<void> {
   const store = await cookies();
   store.set(SESSION_COOKIE, encryptSession(credentials), {
@@ -111,6 +136,9 @@ export async function setSession(credentials: DbCredentials): Promise<void> {
   });
 }
 
+/**
+ * Deletes the session cookie.
+ */
 export async function clearSession(): Promise<void> {
   const store = await cookies();
   store.delete(SESSION_COOKIE);
