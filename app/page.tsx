@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getKpiData, type KpiData } from "@/lib/queries/kpis";
+import { getDashboardData, type DashboardData } from "@/lib/queries/dashboard";
 import { getDefaultDateRange } from "@/lib/ranges";
 import { getSession } from "@/lib/session";
 
@@ -19,11 +19,11 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  let kpiData: KpiData | null;
+  let dashboard: DashboardData | null;
   try {
-    kpiData = await getKpiData(getDefaultDateRange());
+    dashboard = await getDashboardData(getDefaultDateRange());
   } catch {
-    kpiData = null;
+    dashboard = null;
   }
 
   return (
@@ -38,8 +38,8 @@ export default async function DashboardPage() {
           </Button>
         </form>
       </header>
-      {kpiData ? (
-        <KpiGrid data={kpiData} />
+      {dashboard ? (
+        <KpiGrid data={dashboard.kpi} />
       ) : (
         <Card>
           <CardHeader>
