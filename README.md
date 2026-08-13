@@ -2,43 +2,36 @@
 
 A modern web application for visualising restaurant reservation data through interactive dashboards and business intelligence reports.
 
-The dashboard is designed for restaurant owners and managers to monitor reservation trends, customer behaviour, occupancy, and operational performance. It demonstrates full-stack web development, SQL analytics, and data visualisation using a modern TypeScript stack.
+The dashboard is designed for restaurant owners and managers to monitor reservation trends, customer behaviour, and operational performance. It demonstrates full-stack web development, SQL analytics, and data visualisation using a modern TypeScript stack.
 
 ---
 
 ## Features
 
+### Authentication
+
+- Log in with PostgreSQL database credentials (username and password are entered in the login form, never stored)
+- Credentials are encrypted into a 7-day HttpOnly session cookie using AES-256-GCM
+- The login page redirects to the dashboard when already authenticated; the dashboard redirects to `/login` otherwise
+- Log out clears the session
+
 ### Executive Overview
 
-- Daily reservation summary
-- Total guests
-- Occupancy rate
-- Average party size
-- Cancellation rate
-- No-show rate
+- KPI cards for reservations, guests, average party size, cancellation rate, and no-show rate
+- Each card compares the current period against the previous period
+  - Counts (reservations, guests) show percentage change
+  - Rates show percentage-point change
+  - Deltas are coloured emerald or red depending on whether the move is good or bad for the business
 
 ### Reservation Analytics
 
-- Reservation trends over time
-- Guest trends
-- Reservations by hour
-- Reservations by weekday
-- Hour × weekday reservation heatmap
+- Reservations / guests trend line chart with a metric toggle
+- Reservation heatmap by hour × day of week with a grayscale intensity legend
 
 ### Customer Insights
 
-- Party size distribution
-- Returning vs new customers
-- Booking lead time analysis
-- Reservation status distribution
-- Booking source distribution
-
-### Operational Insights
-
-- Table utilisation
-- Occupancy timeline
-- Reservation details table
-- Interactive filtering
+- Party size distribution bar chart
+- Donut charts for booking source, customer type, and customer gender
 
 ---
 
@@ -55,7 +48,7 @@ The dashboard is designed for restaurant owners and managers to monitor reservat
 
 ### Database
 
-- PostgreSQL
+- PostgreSQL (`pg` driver)
 
 ### Development
 
@@ -71,19 +64,23 @@ The dashboard is designed for restaurant owners and managers to monitor reservat
 Browser
     │
     ▼
+Login (DB credentials)
+    │
+    ▼
 Next.js App Router
 (Server Components)
     │
-SQL Queries
+    ▼
+Single SQL query
+(CTEs + json_build_object)
     │
+    ▼
 PostgreSQL
 ```
 
-The application intentionally keeps the architecture simple.
-
-- SQL performs filtering, joins, aggregations, and business calculations.
-- Next.js Server Components execute SQL queries securely.
-- React Client Components render interactive charts.
+- The dashboard loads with a single combined SQL query: common-table expressions filter bookings and aggregate all sections (KPI summary, daily trend, heatmap, party size, and breakdowns), then `json_build_object` returns them in one payload.
+- Server Components call `getDashboardData()`, which runs the query with the logged-in user's database credentials and parses each section into typed data.
+- React Client Components render interactive charts from that typed data.
 - No separate backend service is required.
 
 ---
@@ -91,31 +88,29 @@ The application intentionally keeps the architecture simple.
 ## Project Structure
 
 ```
-restaurant-dashboard/
+restaurant-reservations/
 │
 ├── app/
-│   ├── dashboard/
-│   ├── api/
-│   └── layout.tsx
+│   ├── api/auth/            # Login / logout API routes
+│   ├── login/               # Login page (server guard + client form)
+│   ├── layout.tsx
+│   ├── globals.css
+│   └── page.tsx             # Dashboard page
 │
 ├── components/
-│   ├── charts/
-│   ├── dashboard/
-│   ├── filters/
-│   ├── tables/
-│   └── ui/
+│   ├── dashboard/           # Chart components (kpi, trend, heatmap, party size, donut)
+│   └── ui/                  # shadcn/ui primitives
 │
 ├── lib/
-│   ├── db.ts
-│   ├── queries/
-│   ├── utils.ts
-│   └── constants.ts
+│   ├── db.ts                # Per-request pg client + debug logging
+│   ├── session.ts           # Session cookie encryption / auth helpers
+│   ├── ranges.ts            # Date ranges and date formatting
+│   ├── delta.ts             # Delta computation for KPI comparisons
+│   ├── format.ts            # Number / percentage formatting
+│   ├── utils.ts             # cn() helper
+│   └── queries/             # SQL + parsers per dashboard section
 │
-├── public/
-│
-├── styles/
-│
-├── types/
+├── wireframe.txt            # Design reference for planned sections
 │
 └── README.md
 ```
@@ -125,54 +120,22 @@ restaurant-dashboard/
 ## Dashboard Layout
 
 ```
-+------------------------------------------------------------+
-| KPI Cards                                                  |
-+------------------------------------------------------------+
++-------------------------------------------------------------+
+| KPI Cards: Reservations · Guests · Avg Party · Cancellation │
+|            Rate · No-show Rate                              │
++-------------------------------------------------------------+
 
-+----------------------------+-------------------------------+
-| Reservation Trend          | Guest Trend                   |
-+----------------------------+-------------------------------+
++-----------------------------+-------------------------------+
+| Reservations / Guests Trend | Reservation Heatmap           |
++-----------------------------+  (spanning 2 rows)            |
+| Party Size Distribution     |                               |
++-----------------------------+-------------------------------+
 
-+----------------------------+-------------------------------+
-| Reservations by Hour       | Reservations by Weekday       |
-+----------------------------+-------------------------------+
-
-+------------------------------------------------------------+
-| Reservation Heatmap                                         |
-+------------------------------------------------------------+
-
-+------------------+------------------+----------------------+
-| Party Size       | Lead Time        | Reservation Status   |
-+------------------+------------------+----------------------+
-
-+------------------+------------------+----------------------+
-| Booking Source   | Returning Users  | Table Utilisation    |
-+------------------+------------------+----------------------+
-
-+------------------------------------------------------------+
-| Occupancy Timeline                                         |
-+------------------------------------------------------------+
-
-+------------------------------------------------------------+
-| Reservation Details Table                                  |
-+------------------------------------------------------------+
++--------------------------+--------------------------+---------+
+| Booking Source (donut)   | Customer Type (donut)    | Customer|
+|                          |                          | Gender  |
++--------------------------+--------------------------+---------+
 ```
-
----
-
-## Database
-
-The dashboard assumes a PostgreSQL database containing reservation-related information.
-
-Typical entities include:
-
-- Reservations
-- Customers
-- Tables
-- Reservation Status
-- Booking Source
-
-The dashboard is query-driven, meaning charts consume aggregated SQL results instead of raw transactional data whenever possible.
 
 ---
 
@@ -183,28 +146,23 @@ Business logic should be implemented inside SQL whenever practical.
 Examples include:
 
 - CTEs
-- Window functions
 - Aggregate functions
 - Conditional aggregation
 - Date/time bucketing
-- Ranking
 - Joins
 
-The frontend should receive datasets already shaped for visualisation.
-
-Example output:
+The frontend receives datasets already shaped for visualisation via a single `json_build_object` payload:
 
 ```json
-[
-  {
-    "day": "2026-08-01",
-    "reservations": 42
-  },
-  {
-    "day": "2026-08-02",
-    "reservations": 51
-  }
-]
+{
+  "kpi": [...],
+  "daily": [...],
+  "heatmap": [...],
+  "party_size": [...],
+  "booking_channel": [...],
+  "customer_type": [...],
+  "booking_customer_gender": [...]
+}
 ```
 
 instead of raw reservation records.
@@ -213,23 +171,47 @@ instead of raw reservation records.
 
 ## Development
 
-Install dependencies
+### Setup
 
-```bash
-pnpm install
-```
+1. Install dependencies
 
-Run development server
+   ```bash
+   pnpm install
+   ```
 
-```bash
-pnpm dev
-```
+2. Configure the database connection
 
-Open
+   ```bash
+   cp .env.example .env.local
+   ```
 
-```
-http://localhost:3000
-```
+   Fill in `DATABASE_HOST`, `DATABASE_PORT`, and `DATABASE_NAME`. The database username and password are entered at login, not stored in environment variables.
+
+3. Generate a session secret
+
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+
+   and set it as `AUTH_SECRET` in `.env.local`.
+
+4. Run the development server
+
+   ```bash
+   pnpm dev
+   ```
+
+5. Open the dashboard
+
+   ```
+   http://localhost:3000
+   ```
+
+   and log in with your PostgreSQL credentials.
+
+### Debugging
+
+Set `SQL_DEBUG=1` in `.env.local` to log every query, its parameters, and its rows to the server console.
 
 ---
 
@@ -239,7 +221,7 @@ http://localhost:3000
 - Prioritise business insights over decorative charts.
 - Perform heavy data processing in SQL.
 - Minimise frontend data transformation.
-- Optimise for fast dashboard loading.
+- Optimise for fast dashboard loading (single query per page load).
 - Build reusable components.
 
 ---
