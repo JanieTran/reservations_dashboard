@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import KpiGrid from "@/components/dashboard/kpi-grid";
+import ReservationsTrend from "@/components/dashboard/reservations-trend";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -39,7 +40,12 @@ export default async function DashboardPage() {
         </form>
       </header>
       {dashboard ? (
-        <KpiGrid data={dashboard.kpi} />
+        <>
+          <KpiGrid data={dashboard.kpi} />
+          <section className="grid gap-4 lg:grid-cols-2">
+            <ReservationsTrend data={dashboard.daily} />
+          </section>
+        </>
       ) : (
         <Card>
           <CardHeader>

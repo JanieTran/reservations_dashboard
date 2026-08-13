@@ -17,11 +17,6 @@ import {
   type KpiRow,
 } from "./kpis";
 
-// ---- constants ----
-
-const SERVICE_LOCATION_ID = "7c2c329c-1fb8-45ba-94bd-128b23c8c2e9";
-const DINE_IN_TYPE = "booking";
-
 // ---- types ----
 
 interface DashboardPayload {
@@ -38,6 +33,8 @@ export interface DashboardData {
 
 // ---- query ----
 
+const SERVICE_LOCATION_ID = "7c2c329c-1fb8-45ba-94bd-128b23c8c2e9";
+const DINE_IN_TYPE = "booking";
 const DASHBOARD_SQL = `
   WITH filtered_bookings AS (
     SELECT
@@ -108,9 +105,9 @@ const DASHBOARD_SQL = `
       'kpi'
       ,(SELECT json_agg(kpi) FROM kpi)
       ,'daily'
-      ,(SELECT json_agg(daily ORDER BY 1) FROM daily)
+      ,(SELECT json_agg(daily ORDER BY date) FROM daily)
       ,'heatmap'
-      ,(SELECT json_agg(heatmap ORDER BY 1, 3) FROM heatmap)
+      ,(SELECT json_agg(heatmap ORDER BY weekday, hour) FROM heatmap)
     ) AS data
 `;
 
