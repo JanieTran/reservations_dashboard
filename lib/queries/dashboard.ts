@@ -16,6 +16,11 @@ import {
   type KpiData,
   type KpiRow,
 } from "./kpis";
+import {
+  partySizeFromRows,
+  type PartySizePoint,
+  type PartySizeRow,
+} from "./party-size";
 
 // ---- types ----
 
@@ -23,12 +28,14 @@ interface DashboardPayload {
   kpi: KpiRow[];
   daily: DailyRow[];
   heatmap: HeatmapRow[];
+  party_size: PartySizeRow[];
 }
 
 export interface DashboardData {
   kpi: KpiData;
   daily: DailyPoint[];
   heatmap: HeatmapPoint[];
+  party_size: PartySizePoint[];
 }
 
 // ---- query ----
@@ -41,6 +48,32 @@ const DASHBOARD_SQL = `
       BK.status
       ,BK.number_of_people
       ,BK.reserved_at + INTERVAL '7 hours' AS reserved_at
+      ,EXTRACT(ISODOW FROM BK.reserved_at) AS weekday
+      ,CONCAT(EXTRACT(ISODOW FROM BK.reserved_at), ' - ', LEFT(TO_CHAR(BK.reserved_at, 'Day'), 3)) AS weekday_char
+      ,EXTRACT(HOUR FROM BK.reserved_at + INTERVAL '7 hours')   AS hour
+      ,INITCAP(BK.booking_channel) AS booking_channel
+      ,MC.name AS merchant_name
+      ,SL.name AS service_location_name
+      ,CASE
+        WHEN EXTRACT(EPOCH FROM (BK.reserved_at - BK.inserted_at)) / 86400.0 < 1 THEN '[0] Same day'
+        WHEN EXTRACT(EPOCH FROM (BK.reserved_at - BK.inserted_at)) / 86400.0 < 2 THEN '[1] 1 day'
+        WHEN EXTRACT(EPOCH FROM (BK.reserved_at - BK.inserted_at)) / 86400.0 < 4 THEN '[2] 2-3 days'
+        WHEN EXTRACT(EPOCH FROM (BK.reserved_at - BK.inserted_at)) / 86400.0 < 7 THEN '[3] 1 week'
+        WHEN EXTRACT(EPOCH FROM (BK.reserved_at - BK.inserted_at)) / 86400.0 < 30 THEN '[4] 1 month'
+        WHEN EXTRACT(EPOCH FROM (BK.reserved_at - BK.inserted_at)) / 86400.0 < 90 THEN '[5] 1 quarter'
+        WHEN EXTRACT(EPOCH FROM (BK.reserved_at - BK.inserted_at)) / 86400.0 < 180 THEN '[6] Half year'
+        WHEN EXTRACT(EPOCH FROM (BK.reserved_at - BK.inserted_at)) / 86400.0 < 365 THEN '[7] 1 year'
+        ELSE '8 - More than 1 year'
+      END AS lead_time
+      ,CASE
+        WHEN BK.customer_id IS NULL THEN 'New'
+        ELSE 'Returning'
+      END AS customer_type
+      ,CASE
+        WHEN LOWER(SPLIT_PART(BK.guest_fullname, ' ', 1)) IN ('anh', 'mr') THEN 'Male'
+        WHEN LOWER(SPLIT_PART(BK.guest_fullname, ' ', 1)) IN ('chi', 'chị', 'ms') THEN 'Female'
+        ELSE NULL
+      END AS booking_customer_gender
       ,CASE
         WHEN DATE(BK.reserved_at + INTERVAL '7 hours')
           BETWEEN $1 AND $2
@@ -49,7 +82,9 @@ const DASHBOARD_SQL = `
           BETWEEN $3 AND $4
         THEN 'previous'
       END AS period
-    FROM bookings AS BK
+    FROM public.bookings AS BK
+    LEFT JOIN public.merchants AS MC ON BK.merchant_id = MC.id
+    LEFT JOIN public.service_locations AS SL ON BK.service_location_id = SL.id
     WHERE
       BK.is_test = FALSE
       AND DATE(BK.reserved_at + INTERVAL '7 hours') BETWEEN $3 AND $2
@@ -100,6 +135,13 @@ const DASHBOARD_SQL = `
     FROM filtered_bookings
     GROUP BY 1
   )
+  ,party_size AS (
+    SELECT
+      number_of_people
+      ,COUNT(*) AS reservations
+    FROM filtered_bookings
+    GROUP BY 1
+  )
   SELECT
     json_build_object(
       'kpi'
@@ -108,15 +150,17 @@ const DASHBOARD_SQL = `
       ,(SELECT json_agg(daily ORDER BY date) FROM daily)
       ,'heatmap'
       ,(SELECT json_agg(heatmap ORDER BY weekday, hour) FROM heatmap)
+      ,'party_size'
+      ,(SELECT json_agg(party_size ORDER BY number_of_people) FROM party_size)
     ) AS data
 `;
 
 // ---- public api ----
 
 /**
- * Fetches all dashboard sections (KPI summary, daily trend, and heatmap) in
- * a single query and returns them as typed data. Missing sections are
- * returned as empty/zeroed fallbacks.
+ * Fetches all dashboard sections (KPI summary, daily trend, heatmap, and
+ * party size distribution) in a single query and returns them as typed data.
+ * Missing sections are returned as empty/zeroed fallbacks.
  */
 export async function getDashboardData(
   range: DateRange
@@ -138,6 +182,7 @@ export async function getDashboardData(
     kpi: kpisFromRows(payload?.kpi ?? []),
     daily: dailyFromRows(payload?.daily ?? []),
     heatmap: heatmapFromRows(payload?.heatmap ?? []),
+    party_size: partySizeFromRows(payload?.party_size ?? []),
   };
 }
 

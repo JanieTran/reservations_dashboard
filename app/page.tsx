@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import KpiGrid from "@/components/dashboard/kpi-grid";
+import PartySize from "@/components/dashboard/party-size";
 import ReservationHeatmap from "@/components/dashboard/reservations-heatmap";
 import ReservationsTrend from "@/components/dashboard/reservations-trend";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,11 @@ export default async function DashboardPage() {
           <KpiGrid data={dashboard.kpi} />
           <section className="grid gap-4 lg:grid-cols-2">
             <ReservationsTrend data={dashboard.daily} />
-            <ReservationHeatmap data={dashboard.heatmap} />
+            <ReservationHeatmap
+              data={dashboard.heatmap}
+              className="lg:row-span-2"
+            />
+            <PartySize data={dashboard.party_size} />
           </section>
         </>
       ) : (

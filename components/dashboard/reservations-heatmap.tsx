@@ -30,9 +30,13 @@ function dayLabel(weekday: number): string {
 
 interface ReservationHeatmapProps {
   data: HeatmapPoint[];
+  className?: string;
 }
 
-export default function ReservationHeatmap({ data }: ReservationHeatmapProps) {
+export default function ReservationHeatmap({
+  data,
+  className,
+}: ReservationHeatmapProps) {
   // Aggregate the rows into a lookup keyed by "weekday:hour" so each grid
   // cell can be filled directly by its coordinates. Also track the busiest
   // hour (to normalize intensity) and the first/last observed hour (to size
@@ -103,7 +107,7 @@ export default function ReservationHeatmap({ data }: ReservationHeatmapProps) {
   }
 
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle>Reservation Heatmap</CardTitle>
         <CardDescription>Hour × Day of Week</CardDescription>
