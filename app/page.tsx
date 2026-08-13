@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import KpiGrid from "@/components/dashboard/kpi-grid";
+import DonutChart from "@/components/dashboard/donut-chart";
 import PartySize from "@/components/dashboard/party-size";
 import ReservationHeatmap from "@/components/dashboard/reservations-heatmap";
 import ReservationsTrend from "@/components/dashboard/reservations-trend";
@@ -51,6 +52,20 @@ export default async function DashboardPage() {
               className="lg:row-span-2"
             />
             <PartySize data={dashboard.party_size} />
+          </section>
+          <section className="grid gap-4 md:grid-cols-3">
+            <DonutChart
+              title="Booking Source"
+              data={dashboard.booking_channel}
+            />
+            <DonutChart
+              title="Customer Type"
+              data={dashboard.customer_type}
+            />
+            <DonutChart
+              title="Reservation Holder Gender"
+              data={dashboard.booking_customer_gender}
+            />
           </section>
         </>
       ) : (

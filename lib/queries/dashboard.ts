@@ -2,6 +2,11 @@ import { query } from "@/lib/db";
 import { toDateKey, type DateRange } from "@/lib/ranges";
 
 import {
+  breakdownFromRows,
+  type BreakdownPoint,
+  type BreakdownRow,
+} from "./breakdown";
+import {
   dailyFromRows,
   type DailyPoint,
   type DailyRow,
@@ -29,6 +34,9 @@ interface DashboardPayload {
   daily: DailyRow[];
   heatmap: HeatmapRow[];
   party_size: PartySizeRow[];
+  booking_channel: BreakdownRow[];
+  customer_type: BreakdownRow[];
+  booking_customer_gender: BreakdownRow[];
 }
 
 export interface DashboardData {
@@ -36,6 +44,9 @@ export interface DashboardData {
   daily: DailyPoint[];
   heatmap: HeatmapPoint[];
   party_size: PartySizePoint[];
+  booking_channel: BreakdownPoint[];
+  customer_type: BreakdownPoint[];
+  booking_customer_gender: BreakdownPoint[];
 }
 
 // ---- query ----
@@ -142,6 +153,30 @@ const DASHBOARD_SQL = `
     FROM filtered_bookings
     GROUP BY 1
   )
+  ,booking_channels AS (
+    SELECT
+      booking_channel
+      ,COUNT(*) AS reservations
+    FROM filtered_bookings
+    WHERE booking_channel IS NOT NULL
+    GROUP BY 1
+  )
+  ,customer_types AS (
+    SELECT
+      customer_type
+      ,COUNT(*) AS reservations
+    FROM filtered_bookings
+    WHERE customer_type IS NOT NULL
+    GROUP BY 1
+  )
+  ,booking_customer_genders AS (
+    SELECT
+      booking_customer_gender
+      ,COUNT(*) AS reservations
+    FROM filtered_bookings
+    WHERE booking_customer_gender IS NOT NULL
+    GROUP BY 1
+  )
   SELECT
     json_build_object(
       'kpi'
@@ -152,15 +187,22 @@ const DASHBOARD_SQL = `
       ,(SELECT json_agg(heatmap ORDER BY weekday, hour) FROM heatmap)
       ,'party_size'
       ,(SELECT json_agg(party_size ORDER BY number_of_people) FROM party_size)
+      ,'booking_channel'
+      ,(SELECT json_agg(booking_channels ORDER BY reservations DESC) FROM booking_channels)
+      ,'customer_type'
+      ,(SELECT json_agg(customer_types ORDER BY reservations DESC) FROM customer_types)
+      ,'booking_customer_gender'
+      ,(SELECT json_agg(booking_customer_genders ORDER BY reservations DESC) FROM booking_customer_genders)
     ) AS data
 `;
 
 // ---- public api ----
 
 /**
- * Fetches all dashboard sections (KPI summary, daily trend, heatmap, and
- * party size distribution) in a single query and returns them as typed data.
- * Missing sections are returned as empty/zeroed fallbacks.
+ * Fetches all dashboard sections (KPI summary, daily trend, heatmap, party
+ * size distribution, and the booking channel / customer type / gender
+ * breakdowns) in a single query and returns them as typed data. Missing
+ * sections are returned as empty/zeroed fallbacks.
  */
 export async function getDashboardData(
   range: DateRange
@@ -183,6 +225,15 @@ export async function getDashboardData(
     daily: dailyFromRows(payload?.daily ?? []),
     heatmap: heatmapFromRows(payload?.heatmap ?? []),
     party_size: partySizeFromRows(payload?.party_size ?? []),
+    booking_channel: breakdownFromRows(
+      payload?.booking_channel ?? [],
+      "booking_channel"
+    ),
+    customer_type: breakdownFromRows(payload?.customer_type ?? [], "customer_type"),
+    booking_customer_gender: breakdownFromRows(
+      payload?.booking_customer_gender ?? [],
+      "booking_customer_gender"
+    ),
   };
 }
 
