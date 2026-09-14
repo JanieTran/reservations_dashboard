@@ -62,19 +62,34 @@ export default function DonutChart({
         <CardTitle>{title}</CardTitle>
         {description ? <CardDescription>{description}</CardDescription> : null}
       </CardHeader>
-      <CardContent className="flex flex-col items-center gap-4">
-        <div className="h-48 w-full">
+      <CardContent>
+        <div className="h-56 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
+            <PieChart margin={{ top: 16, right: 16, bottom: 16, left: 16 }}>
               <Pie
                 data={data}
                 dataKey="reservations"
                 nameKey="label"
-                innerRadius="60%"
-                outerRadius="90%"
+                startAngle={90}
+                endAngle={-270}
+                innerRadius="40%"
+                outerRadius="80%"
                 paddingAngle={2}
                 stroke="var(--card)"
-                strokeWidth={2}
+                strokeWidth={1}
+                labelLine={false}
+                label={({ name, percent }) => {
+                  if ((percent ?? 0) < 0.1) {
+                    return null;
+                  }
+                  const label = String(name ?? "");
+                  const displayLabel =
+                    label.length > 18 ? `${label.slice(0, 17)}...` : label;
+
+                  return `${displayLabel} ${Math.round(
+                    (percent ?? 0) * 100
+                  )}%`;
+                }}
                 shape={(props) => (
                   <Sector
                     {...props}
@@ -97,24 +112,6 @@ export default function DonutChart({
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <ul className="flex w-full flex-col gap-1.5">
-          {data.map((point, index) => (
-            <li
-              key={`item-${index}`}
-              className="flex items-center gap-2 text-sm"
-            >
-              <span
-                className="size-2.5 shrink-0 rounded-full"
-                style={{ backgroundColor: COLORS[index % COLORS.length] }}
-              />
-              <span className="text-muted-foreground">{point.label}</span>
-              <span className="ml-auto tabular-nums">
-                {point.reservations} (
-                {Math.round((point.reservations / total) * 100)}%)
-              </span>
-            </li>
-          ))}
-        </ul>
       </CardContent>
     </Card>
   );
