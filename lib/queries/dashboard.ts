@@ -36,6 +36,7 @@ interface DashboardPayload {
   party_size: PartySizeRow[];
   booking_channel: BreakdownRow[];
   customer_type: BreakdownRow[];
+  service_location: BreakdownRow[];
   booking_customer_gender: BreakdownRow[];
 }
 
@@ -46,12 +47,12 @@ export interface DashboardData {
   party_size: PartySizePoint[];
   booking_channel: BreakdownPoint[];
   customer_type: BreakdownPoint[];
+  service_location: BreakdownPoint[];
   booking_customer_gender: BreakdownPoint[];
 }
 
 // ---- query ----
 
-const SERVICE_LOCATION_ID = "7c2c329c-1fb8-45ba-94bd-128b23c8c2e9";
 const DINE_IN_TYPE = "booking";
 const DASHBOARD_SQL = `
   WITH filtered_bookings AS (
@@ -99,7 +100,6 @@ const DASHBOARD_SQL = `
     WHERE
       BK.is_test = FALSE
       AND DATE(BK.reserved_at + INTERVAL '7 hours') BETWEEN $3 AND $2
-      AND BK.service_location_id = '${SERVICE_LOCATION_ID}'
       AND BK.dine_in_type = '${DINE_IN_TYPE}'
   )
   ,daily AS (
@@ -169,6 +169,15 @@ const DASHBOARD_SQL = `
     WHERE customer_type IS NOT NULL
     GROUP BY 1
   )
+  ,service_locations AS (
+    SELECT
+      service_location_name
+      ,COUNT(*) AS reservations
+    FROM filtered_bookings
+    WHERE service_location_name IS NOT NULL
+      AND TRIM(service_location_name) <> ''
+    GROUP BY 1
+  )
   ,booking_customer_genders AS (
     SELECT
       booking_customer_gender
@@ -191,6 +200,8 @@ const DASHBOARD_SQL = `
       ,(SELECT json_agg(booking_channels ORDER BY reservations DESC) FROM booking_channels)
       ,'customer_type'
       ,(SELECT json_agg(customer_types ORDER BY reservations DESC) FROM customer_types)
+      ,'service_location'
+      ,(SELECT json_agg(service_locations ORDER BY reservations DESC, service_location_name) FROM service_locations)
       ,'booking_customer_gender'
       ,(SELECT json_agg(booking_customer_genders ORDER BY reservations DESC) FROM booking_customer_genders)
     ) AS data
@@ -230,6 +241,10 @@ export async function getDashboardData(
       "booking_channel"
     ),
     customer_type: breakdownFromRows(payload?.customer_type ?? [], "customer_type"),
+    service_location: breakdownFromRows(
+      payload?.service_location ?? [],
+      "service_location_name"
+    ),
     booking_customer_gender: breakdownFromRows(
       payload?.booking_customer_gender ?? [],
       "booking_customer_gender"

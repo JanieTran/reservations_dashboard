@@ -51,7 +51,11 @@ export default async function DashboardPage() {
               data={dashboard.heatmap}
               className="lg:row-span-2"
             />
-            <PartySize data={dashboard.party_size} />
+            <DonutChart
+              title="Service Location"
+              data={dashboard.service_location}
+            />
+            {/* <PartySize data={dashboard.party_size} /> */}
           </section>
           <section className="grid gap-4 md:grid-cols-3">
             <DonutChart
