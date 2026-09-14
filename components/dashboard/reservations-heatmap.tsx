@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { HeatmapPoint } from "@/lib/queries/heatmap";
+import type { HeatmapPoint } from "@/lib/queries/dashboard-types";
 import { cn } from "@/lib/utils";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];

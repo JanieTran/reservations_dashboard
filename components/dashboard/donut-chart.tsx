@@ -15,7 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { BreakdownPoint } from "@/lib/queries/breakdown";
+import type { BreakdownPoint } from "@/lib/queries/dashboard-types";
 
 const COLORS = [
   "var(--chart-5)",

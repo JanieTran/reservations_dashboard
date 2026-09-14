@@ -17,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { PartySizePoint } from "@/lib/queries/party-size";
+import type { PartySizePoint } from "@/lib/queries/dashboard-types";
 
 interface PartySizeProps {
   data: PartySizePoint[];

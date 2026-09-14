@@ -18,7 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { DailyPoint } from "@/lib/queries/daily";
+import type { DailyPoint } from "@/lib/queries/dashboard-types";
 import { cn } from "@/lib/utils";
 
 type Metric = "reservations" | "guests";

@@ -2,61 +2,16 @@ import { query } from "@/lib/db";
 import { toDateKey, type DateRange } from "@/lib/ranges";
 
 import {
-  breakdownFromRows,
-  type BreakdownPoint,
-  type BreakdownRow,
-} from "./breakdown";
-import {
   bookingChannelRatesFromRows,
-  type BookingChannelRatePoint,
-  type BookingChannelRateRow,
-} from "./booking-channel-rates";
-import {
+  breakdownFromRows,
   dailyFromRows,
-  type DailyPoint,
-  type DailyRow,
-} from "./daily";
-import {
   heatmapFromRows,
-  type HeatmapPoint,
-  type HeatmapRow,
-} from "./heatmap";
-import {
   kpisFromRows,
-  type KpiData,
-  type KpiRow,
-} from "./kpis";
-import {
   partySizeFromRows,
-  type PartySizePoint,
-  type PartySizeRow,
-} from "./party-size";
+} from "./dashboard-parsers";
+import type { DashboardData, DashboardPayload } from "./dashboard-types";
 
-// ---- types ----
-
-interface DashboardPayload {
-  kpi: KpiRow[];
-  daily: DailyRow[];
-  heatmap: HeatmapRow[];
-  party_size: PartySizeRow[];
-  booking_channel: BreakdownRow[];
-  booking_channel_rate: BookingChannelRateRow[];
-  customer_type: BreakdownRow[];
-  service_location: BreakdownRow[];
-  booking_customer_gender: BreakdownRow[];
-}
-
-export interface DashboardData {
-  kpi: KpiData;
-  daily: DailyPoint[];
-  heatmap: HeatmapPoint[];
-  party_size: PartySizePoint[];
-  booking_channel: BreakdownPoint[];
-  booking_channel_rate: BookingChannelRatePoint[];
-  customer_type: BreakdownPoint[];
-  service_location: BreakdownPoint[];
-  booking_customer_gender: BreakdownPoint[];
-}
+export type { DashboardData } from "./dashboard-types";
 
 // ---- query ----
 
@@ -211,7 +166,7 @@ const DASHBOARD_SQL = `
       ,'party_size'
       ,(SELECT json_agg(party_size ORDER BY number_of_people) FROM party_size)
       ,'booking_channel'
-      ,(SELECT json_agg(booking_channels ORDER BY reservations DESC) FROM booking_channels)
+      ,(SELECT json_agg(booking_channels ORDER BY booking_channel) FROM booking_channels)
       ,'booking_channel_rate'
       ,(SELECT json_agg(booking_channel_rates ORDER BY booking_channel) FROM booking_channel_rates)
       ,'customer_type'

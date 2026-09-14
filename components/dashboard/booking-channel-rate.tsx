@@ -17,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { BookingChannelRatePoint } from "@/lib/queries/booking-channel-rates";
+import type { BookingChannelRatePoint } from "@/lib/queries/dashboard-types";
 
 interface BookingChannelRateProps {
   data: BookingChannelRatePoint[];

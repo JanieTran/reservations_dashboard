@@ -1,6 +1,6 @@
 import { buildDelta, type Delta, type DeltaKind } from "@/lib/delta";
 import { formatCount, formatPercent } from "@/lib/format";
-import type { KpiData, KpiPeriod } from "@/lib/queries/kpis";
+import type { KpiData, KpiPeriod } from "@/lib/queries/dashboard-types";
 
 import KpiCard from "./kpi-card";
 
