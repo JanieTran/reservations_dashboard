@@ -1,5 +1,5 @@
 import { buildDelta, type Delta, type DeltaKind } from "@/lib/delta";
-import { formatCount, formatDecimal, formatPercent } from "@/lib/format";
+import { formatCount, formatPercent } from "@/lib/format";
 import type { KpiData, KpiPeriod } from "@/lib/queries/kpis";
 
 import KpiCard from "./kpi-card";
@@ -34,13 +34,6 @@ const KPI_CONFIG: Array<{
     label: "Guests",
     key: "total_guests",
     format: formatCount,
-    deltaKind: "percent",
-    goodWhenUp: true,
-  },
-  {
-    label: "Avg Party Size",
-    key: "average_guests",
-    format: formatDecimal,
     deltaKind: "percent",
     goodWhenUp: true,
   },
@@ -82,7 +75,7 @@ export default function KpiGrid({ data }: KpiGridProps) {
   const items = getKpiItems(data);
 
   return (
-    <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {items.map((item) => (
         <KpiCard key={item.label} {...item} />
       ))}

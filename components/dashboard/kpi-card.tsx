@@ -28,20 +28,26 @@ export default function KpiCard({ label, value, delta }: KpiCardProps) {
   return (
     <Card size="sm">
       <CardContent>
+        {/* KPI label */}
         <p className="text-muted-foreground text-sm">{label}</p>
-        <p className="mt-1 text-2xl font-semibold">{value}</p>
-        <p
-          className={cn(
-            "mt-1 flex items-center gap-1 text-sm",
-            toneStyles[delta.tone]
-          )}
-        >
-          <Icon className="size-4" aria-hidden />
-          <span>
-            {delta.text}{" "}
-            <span className="text-muted-foreground">vs previous</span>
-          </span>
-        </p>
+
+        <div className="flex items-end gap-3">
+          {/* KPI value */}
+          <p className="mt-1 text-2xl font-semibold">{value}</p>
+          {/* Delta vs previous period */}
+          <p
+            className={cn(
+              "mt-1 flex items-center gap-1 text-sm",
+              toneStyles[delta.tone]
+            )}
+          >
+            <Icon className="size-4" aria-hidden />
+            <span>
+              {delta.text}{" "}
+              <span className="text-muted-foreground">vs previous</span>
+            </span>
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

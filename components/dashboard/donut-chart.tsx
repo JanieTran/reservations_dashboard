@@ -79,7 +79,7 @@ export default function DonutChart({
                 strokeWidth={1}
                 labelLine={false}
                 label={({ name, percent }) => {
-                  if ((percent ?? 0) < 0.1) {
+                  if (Math.round((percent ?? 0) * 100) < 10) {
                     return null;
                   }
                   const label = String(name ?? "");
