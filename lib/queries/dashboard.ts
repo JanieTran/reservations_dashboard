@@ -7,6 +7,11 @@ import {
   type BreakdownRow,
 } from "./breakdown";
 import {
+  bookingChannelRatesFromRows,
+  type BookingChannelRatePoint,
+  type BookingChannelRateRow,
+} from "./booking-channel-rates";
+import {
   dailyFromRows,
   type DailyPoint,
   type DailyRow,
@@ -35,6 +40,7 @@ interface DashboardPayload {
   heatmap: HeatmapRow[];
   party_size: PartySizeRow[];
   booking_channel: BreakdownRow[];
+  booking_channel_rate: BookingChannelRateRow[];
   customer_type: BreakdownRow[];
   service_location: BreakdownRow[];
   booking_customer_gender: BreakdownRow[];
@@ -46,6 +52,7 @@ export interface DashboardData {
   heatmap: HeatmapPoint[];
   party_size: PartySizePoint[];
   booking_channel: BreakdownPoint[];
+  booking_channel_rate: BookingChannelRatePoint[];
   customer_type: BreakdownPoint[];
   service_location: BreakdownPoint[];
   booking_customer_gender: BreakdownPoint[];
@@ -77,6 +84,18 @@ const DASHBOARD_SQL = `
         WHEN EXTRACT(EPOCH FROM (BK.reserved_at - BK.inserted_at)) / 86400.0 < 365 THEN '[7] 1 year'
         ELSE '8 - More than 1 year'
       END AS lead_time
+      ,CASE
+        WHEN BK.status = 'cancelled' THEN 1
+        ELSE 0
+      END AS is_cancelled
+      ,CASE
+        WHEN BK.status = 'no_show' THEN 1
+        ELSE 0
+      END AS is_no_show
+      ,CASE
+        WHEN BK.status IN ('cancelled', 'no_show') THEN 1
+        ELSE 0
+      END AS is_cancelled_or_no_show
       ,CASE
         WHEN BK.customer_id IS NULL THEN 'New'
         ELSE 'Returning'
@@ -125,24 +144,10 @@ const DASHBOARD_SQL = `
       ,COUNT(*) AS total_reservations
       ,COALESCE(SUM(number_of_people), 0) AS total_guests
       ,ROUND(AVG(number_of_people), 2) AS average_guests
-      ,COUNT(*) FILTER (
-        WHERE status = 'cancelled'
-      ) AS cancelled_reservations
-      ,ROUND(
-        COUNT(*) FILTER (WHERE status = 'cancelled')
-        * 100.0
-        / NULLIF(COUNT(*), 0),
-        2
-      ) AS cancellation_rate
-      ,COUNT(*) FILTER (
-        WHERE status = 'no_show'
-      ) AS no_show_reservations
-      ,ROUND(
-        COUNT(*) FILTER (WHERE status = 'no_show')
-        * 100.0
-        / NULLIF(COUNT(*), 0),
-        2
-      ) AS no_show_rate
+      ,COUNT(*) FILTER (WHERE is_cancelled = 1) AS cancelled_reservations
+      ,ROUND(AVG(is_cancelled) * 100, 2) AS cancellation_rate
+      ,COUNT(*) FILTER (WHERE is_no_show = 1) AS no_show_reservations
+      ,ROUND(AVG(is_no_show) * 100, 2) AS no_show_rate
     FROM filtered_bookings
     GROUP BY 1
   )
@@ -159,6 +164,15 @@ const DASHBOARD_SQL = `
       ,COUNT(*) AS reservations
     FROM filtered_bookings
     WHERE booking_channel IS NOT NULL
+    GROUP BY 1
+  )
+  ,booking_channel_rates AS (
+    SELECT
+      booking_channel
+      ,ROUND(AVG(is_cancelled_or_no_show) * 100, 2) AS cancel_or_no_show_rate
+    FROM filtered_bookings
+    WHERE booking_channel IS NOT NULL
+      AND TRIM(booking_channel) <> ''
     GROUP BY 1
   )
   ,customer_types AS (
@@ -198,6 +212,8 @@ const DASHBOARD_SQL = `
       ,(SELECT json_agg(party_size ORDER BY number_of_people) FROM party_size)
       ,'booking_channel'
       ,(SELECT json_agg(booking_channels ORDER BY reservations DESC) FROM booking_channels)
+      ,'booking_channel_rate'
+      ,(SELECT json_agg(booking_channel_rates ORDER BY booking_channel) FROM booking_channel_rates)
       ,'customer_type'
       ,(SELECT json_agg(customer_types ORDER BY reservations DESC) FROM customer_types)
       ,'service_location'
@@ -211,9 +227,9 @@ const DASHBOARD_SQL = `
 
 /**
  * Fetches all dashboard sections (KPI summary, daily trend, heatmap, party
- * size distribution, and the booking channel / customer type / gender
- * breakdowns) in a single query and returns them as typed data. Missing
- * sections are returned as empty/zeroed fallbacks.
+ * size distribution, booking-channel status rates, and the booking channel /
+ * customer type / gender breakdowns) in a single query and returns them as
+ * typed data. Missing sections are returned as empty/zeroed fallbacks.
  */
 export async function getDashboardData(
   range: DateRange
@@ -239,6 +255,9 @@ export async function getDashboardData(
     booking_channel: breakdownFromRows(
       payload?.booking_channel ?? [],
       "booking_channel"
+    ),
+    booking_channel_rate: bookingChannelRatesFromRows(
+      payload?.booking_channel_rate ?? []
     ),
     customer_type: breakdownFromRows(payload?.customer_type ?? [], "customer_type"),
     service_location: breakdownFromRows(
