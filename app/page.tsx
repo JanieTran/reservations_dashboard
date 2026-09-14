@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation";
 
-import KpiGrid from "@/components/dashboard/kpi-grid";
-import DonutChart from "@/components/dashboard/donut-chart";
-import PartySize from "@/components/dashboard/party-size";
-import ReservationHeatmap from "@/components/dashboard/reservations-heatmap";
-import ReservationsTrend from "@/components/dashboard/reservations-trend";
-import { Button } from "@/components/ui/button";
+import BookingBehaviourTab from "@/components/dashboard/booking-behaviour-tab";
+import CustomersTab from "@/components/dashboard/customers-tab";
+import DashboardShell from "@/components/dashboard/dashboard-shell";
+import type { DashboardTab } from "@/components/dashboard/dashboard-sidebar";
+import OverviewTab from "@/components/dashboard/overview-tab";
 import {
   Card,
   CardContent,
@@ -17,11 +16,30 @@ import { getDashboardData, type DashboardData } from "@/lib/queries/dashboard";
 import { getDefaultDateRange } from "@/lib/ranges";
 import { getSession } from "@/lib/session";
 
-export default async function DashboardPage() {
+interface DashboardPageProps {
+  searchParams: Promise<{ tab?: string }>;
+}
+
+function isDashboardTab(value: string | undefined): value is DashboardTab {
+  return (
+    value === "overview" ||
+    value === "booking-behaviour" ||
+    value === "customers"
+  );
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: DashboardPageProps) {
   const session = await getSession();
   if (!session) {
     redirect("/login");
   }
+
+  const requestedTab = (await searchParams).tab;
+  const activeTab: DashboardTab = isDashboardTab(requestedTab)
+    ? requestedTab
+    : "overview";
 
   let dashboard: DashboardData | null;
   try {
@@ -31,47 +49,15 @@ export default async function DashboardPage() {
   }
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-col gap-6 p-8">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">
-          Norra Reservations Dashboard
-        </h1>
-        <form action="/api/auth/logout" method="post">
-          <Button variant="outline" type="submit">
-            Log out
-          </Button>
-        </form>
-      </header>
+    <DashboardShell activeTab={activeTab}>
       {dashboard ? (
-        <>
-          <KpiGrid data={dashboard.kpi} />
-          <section className="grid gap-4 lg:grid-cols-2">
-            <ReservationsTrend data={dashboard.daily} />
-            <ReservationHeatmap
-              data={dashboard.heatmap}
-              className="lg:row-span-2"
-            />
-            <DonutChart
-              title="Service Location"
-              data={dashboard.service_location}
-            />
-            {/* <PartySize data={dashboard.party_size} /> */}
-          </section>
-          <section className="grid gap-4 md:grid-cols-3">
-            <DonutChart
-              title="Booking Source"
-              data={dashboard.booking_channel}
-            />
-            <DonutChart
-              title="Customer Type"
-              data={dashboard.customer_type}
-            />
-            <DonutChart
-              title="Reservation Holder Gender"
-              data={dashboard.booking_customer_gender}
-            />
-          </section>
-        </>
+        activeTab === "overview" ? (
+          <OverviewTab data={dashboard} />
+        ) : activeTab === "booking-behaviour" ? (
+          <BookingBehaviourTab data={dashboard} />
+        ) : (
+          <CustomersTab data={dashboard} />
+        )
       ) : (
         <Card>
           <CardHeader>
@@ -86,6 +72,6 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       )}
-    </main>
+    </DashboardShell>
   );
 }
