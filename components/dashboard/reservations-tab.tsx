@@ -8,8 +8,9 @@ interface ReservationsTabProps {
 
 export default function ReservationsTab({ data }: ReservationsTabProps) {
   return (
-    <section className="grid min-w-0 gap-4 lg:grid-cols-2">
+    <section className="grid min-w-0 gap-4 lg:grid-cols-3">
       <DonutChart title="Booking Source" data={data.booking_channel} />
+      <DonutChart title="Banquet Type" data={data.banquet_type} />
       <BarChartCard
         title="Average Party Size"
         description="Average number of guests by banquet type"

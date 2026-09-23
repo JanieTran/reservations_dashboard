@@ -94,6 +94,7 @@ export interface DashboardPayload {
   heatmap: HeatmapRow[];
   party_size: PartySizeRow[];
   booking_channel: BreakdownRow[];
+  banquet_type: BreakdownRow[];
   booking_channel_rate: BookingChannelRateRow[];
   customer_type: BreakdownRow[];
   service_location: BreakdownRow[];
@@ -106,6 +107,7 @@ export interface DashboardData {
   heatmap: HeatmapPoint[];
   party_size: PartySizePoint[];
   booking_channel: BreakdownPoint[];
+  banquet_type: BreakdownPoint[];
   booking_channel_rate: BookingChannelRatePoint[];
   customer_type: BreakdownPoint[];
   service_location: BreakdownPoint[];

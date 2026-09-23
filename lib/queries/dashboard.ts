@@ -182,6 +182,16 @@ const DASHBOARD_SQL = `
       AND dine_in_type = 'Booking'
     GROUP BY 1
   )
+  ,banquet_type_dist AS (
+    SELECT
+      banquet_type
+      ,COUNT(*) AS reservations
+    FROM filtered_bookings
+    WHERE period = 'current'
+      AND dine_in_type = 'Booking'
+      AND banquet_type IS NOT NULL
+    GROUP BY 1
+  )
   ,booking_channel_rates AS (
     SELECT
       booking_channel
@@ -228,6 +238,8 @@ const DASHBOARD_SQL = `
       ,(SELECT json_agg(party_size ORDER BY average_party_size) FROM party_size)
       ,'booking_channel'
       ,(SELECT json_agg(booking_channels ORDER BY reservations DESC) FROM booking_channels)
+      ,'banquet_type'
+      ,(SELECT json_agg(banquet_type_dist ORDER BY reservations DESC) FROM banquet_type_dist)
       ,'booking_channel_rate'
       ,(SELECT json_agg(booking_channel_rates ORDER BY booking_channel) FROM booking_channel_rates)
       ,'customer_type'
@@ -272,6 +284,7 @@ export async function getDashboardData(
       payload?.booking_channel ?? [],
       "booking_channel"
     ),
+    banquet_type: breakdownFromRows(payload?.banquet_type ?? [], "banquet_type"),
     booking_channel_rate: bookingChannelRatesFromRows(
       payload?.booking_channel_rate ?? []
     ),
