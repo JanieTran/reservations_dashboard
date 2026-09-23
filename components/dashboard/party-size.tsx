@@ -4,6 +4,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  LabelList,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -28,8 +29,8 @@ export default function PartySize({ data }: PartySizeProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Party Size Distribution</CardTitle>
-          <CardDescription>Bookings by party size</CardDescription>
+          <CardTitle>Average Party Size</CardTitle>
+          <CardDescription>Average guests by banquet type</CardDescription>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
           No data available for the selected period.
@@ -41,16 +42,16 @@ export default function PartySize({ data }: PartySizeProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Party Size Distribution</CardTitle>
-        <CardDescription>Bookings by party size</CardDescription>
+        <CardTitle>Average Party Size</CardTitle>
+        <CardDescription>Average number of guests by banquet type</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data}>
+            <BarChart data={data} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid stroke="var(--border)" vertical={false} />
               <XAxis
-                dataKey="number_of_people"
+                dataKey="banquet_type"
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
@@ -58,7 +59,7 @@ export default function PartySize({ data }: PartySizeProps) {
                 fontSize={12}
               />
               <YAxis
-                allowDecimals={false}
+                allowDecimals={true}
                 tickLine={false}
                 axisLine={false}
                 width={40}
@@ -68,16 +69,28 @@ export default function PartySize({ data }: PartySizeProps) {
               <Tooltip
                 formatter={(value, name) => [
                   String(value),
-                  name === "reservations" ? "Reservations" : String(name),
+                  name === "average_party_size" ? "Average Party Size" : String(name),
                 ]}
                 cursor={{ fill: "var(--muted)" }}
               />
               <Bar
-                dataKey="reservations"
+                dataKey="average_party_size"
                 className="fill-chart-2"
                 radius={[4, 4, 0, 0]}
                 maxBarSize={48}
-              />
+                name="Average Party Size"
+              >
+                <LabelList
+                  dataKey="average_party_size"
+                  position="top"
+                  formatter={(value) => {
+                    const numeric = Number(value ?? 0);
+                    return Number.isFinite(numeric) ? numeric.toFixed(1) : "0.0";
+                  }}
+                  fill="var(--muted-foreground)"
+                  fontSize={11}
+                />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>

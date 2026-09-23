@@ -98,8 +98,8 @@ export function kpisFromRows(rows: KpiRow[]): KpiData {
 
 export function partySizeFromRows(rows: PartySizeRow[]): PartySizePoint[] {
   return rows.map((row) => ({
-    number_of_people: toNumber(row.number_of_people),
-    reservations: toNumber(row.reservations),
+    banquet_type: row.banquet_type ?? "Unknown",
+    average_party_size: toNumber(row.average_party_size),
   }));
 }
 

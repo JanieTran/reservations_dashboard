@@ -32,8 +32,8 @@ export interface KpiRow {
 }
 
 export interface PartySizeRow {
-  number_of_people: string;
-  reservations: string;
+  banquet_type: string;
+  average_party_size: string;
 }
 
 export interface BookingChannelRateRow {
@@ -79,8 +79,8 @@ export interface KpiData {
 }
 
 export interface PartySizePoint {
-  number_of_people: number;
-  reservations: number;
+  banquet_type: string;
+  average_party_size: number;
 }
 
 export interface BookingChannelRatePoint {

@@ -165,9 +165,11 @@ const DASHBOARD_SQL = `
   )
   ,party_size AS (
     SELECT
-      number_of_people
-      ,COUNT(*) AS reservations
+      COALESCE(banquet_type, 'Dine In') AS banquet_type
+      ,ROUND(AVG(number_of_people), 2) AS average_party_size
     FROM filtered_bookings
+    WHERE period = 'current'
+      AND dine_in_type = 'Booking'
     GROUP BY 1
   )
   ,booking_channels AS (
@@ -176,6 +178,8 @@ const DASHBOARD_SQL = `
       ,COUNT(*) AS reservations
     FROM filtered_bookings
     WHERE booking_channel IS NOT NULL
+      AND period = 'current'
+      AND dine_in_type = 'Booking'
     GROUP BY 1
   )
   ,booking_channel_rates AS (
@@ -221,9 +225,9 @@ const DASHBOARD_SQL = `
       ,'heatmap'
       ,(SELECT json_agg(heatmap ORDER BY weekday, hour) FROM heatmap)
       ,'party_size'
-      ,(SELECT json_agg(party_size ORDER BY number_of_people) FROM party_size)
+      ,(SELECT json_agg(party_size ORDER BY average_party_size) FROM party_size)
       ,'booking_channel'
-      ,(SELECT json_agg(booking_channels ORDER BY booking_channel) FROM booking_channels)
+      ,(SELECT json_agg(booking_channels ORDER BY reservations DESC) FROM booking_channels)
       ,'booking_channel_rate'
       ,(SELECT json_agg(booking_channel_rates ORDER BY booking_channel) FROM booking_channel_rates)
       ,'customer_type'
