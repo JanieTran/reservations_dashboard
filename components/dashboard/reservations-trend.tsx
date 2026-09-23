@@ -21,10 +21,10 @@ import {
 import type { DailyPoint } from "@/lib/queries/dashboard-types";
 import { cn } from "@/lib/utils";
 
-type Metric = "reservations" | "guests";
+type Metric = "bookings" | "guests";
 
 const METRICS: { key: Metric; label: string; color: string }[] = [
-  { key: "reservations", label: "Reservations", color: "stroke-chart-2" },
+  { key: "bookings", label: "Bookings", color: "stroke-chart-2" },
   { key: "guests", label: "Guests", color: "stroke-chart-3" },
 ];
 
@@ -40,14 +40,14 @@ interface ReservationsTrendProps {
 }
 
 export default function ReservationsTrend({ data }: ReservationsTrendProps) {
-  const [metric, setMetric] = useState<Metric>("reservations");
+  const [metric, setMetric] = useState<Metric>("bookings");
   const active = METRICS.find((m) => m.key === metric) ?? METRICS[0];
 
   if (data.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Reservations Trend</CardTitle>
+          <CardTitle>Daily Trend</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
           No data available for the selected period.
@@ -56,10 +56,13 @@ export default function ReservationsTrend({ data }: ReservationsTrendProps) {
     );
   }
 
+  const currentKey = metric === "bookings" ? "currentBookings" : "currentGuests";
+  const previousKey = metric === "bookings" ? "previousBookings" : "previousGuests";
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{active.label} Trend</CardTitle>
+        <CardTitle>Daily Trend</CardTitle>
         <CardAction>
           <div className="flex items-center gap-0.5 rounded-lg bg-muted p-0.5">
             {METRICS.map((m) => (
@@ -98,23 +101,32 @@ export default function ReservationsTrend({ data }: ReservationsTrendProps) {
                 allowDecimals={false}
                 tickLine={false}
                 axisLine={false}
-                width={40}
+                width={44}
                 stroke="var(--muted-foreground)"
                 fontSize={12}
               />
               <Tooltip
                 labelFormatter={(label) => formatTick(String(label))}
-                formatter={(value, name) => [
-                  String(value),
-                  name === "reservations" ? "Reservations" : "Guests",
-                ]}
+                formatter={(value, name) => [String(value), String(name)]}
                 cursor={{ stroke: "var(--muted-foreground)", strokeOpacity: 0.5 }}
               />
               <Line
                 type="monotone"
-                dataKey={metric}
-                className={active.color}
+                dataKey={currentKey}
+                name="Current"
+                stroke="var(--chart-2)"
+                strokeWidth={2.5}
+                dot={false}
+                activeDot={{ r: 4 }}
+              />
+              <Line
+                type="monotone"
+                dataKey={previousKey}
+                name="Previous"
+                stroke="var(--chart-3)"
                 strokeWidth={2}
+                strokeDasharray="4 4"
+                strokeOpacity={0.7}
                 dot={false}
                 activeDot={{ r: 4 }}
               />

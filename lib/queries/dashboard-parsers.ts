@@ -29,11 +29,28 @@ export function breakdownFromRows(
 }
 
 export function dailyFromRows(rows: DailyRow[]): DailyPoint[] {
-  return rows.map((row) => ({
-    date: row.date,
-    reservations: toNumber(row.reservations),
-    guests: toNumber(row.guests),
-  }));
+  const currentRows = rows
+    .filter((row) => row.period === "current")
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const previousRows = rows
+    .filter((row) => row.period === "previous")
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  return currentRows.map((row, index) => {
+    const previousRow = previousRows[index] ?? {
+      date: row.date,
+      reservations: "0",
+      guests: "0",
+    };
+
+    return {
+      date: row.date,
+      currentBookings: toNumber(row.reservations),
+      previousBookings: toNumber(previousRow.reservations),
+      currentGuests: toNumber(row.guests),
+      previousGuests: toNumber(previousRow.guests),
+    };
+  });
 }
 
 export function heatmapFromRows(rows: HeatmapRow[]): HeatmapPoint[] {

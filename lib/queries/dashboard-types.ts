@@ -5,6 +5,7 @@ export interface BreakdownRow {
 }
 
 export interface DailyRow {
+  period?: "current" | "previous";
   date: string;
   reservations: string;
   guests: string;
@@ -49,8 +50,10 @@ export interface BreakdownPoint {
 
 export interface DailyPoint {
   date: string;
-  reservations: number;
-  guests: number;
+  currentBookings: number;
+  previousBookings: number;
+  currentGuests: number;
+  previousGuests: number;
 }
 
 export interface HeatmapPoint {
