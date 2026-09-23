@@ -19,13 +19,15 @@ export interface HeatmapRow {
 
 export interface KpiRow {
   period: "current" | "previous";
-  total_reservations: string;
+  total_bookings: string;
   total_guests: string;
-  average_guests: string;
+  average_guests?: string;
+  total_reservations?: string;
+  reservation_rate: string;
   cancelled_reservations: string;
   cancellation_rate: string;
-  no_show_reservations: string;
-  no_show_rate: string;
+  no_show_reservations?: string;
+  no_show_rate?: string;
 }
 
 export interface PartySizeRow {
@@ -60,13 +62,12 @@ export interface HeatmapPoint {
 
 export interface KpiPeriod {
   period: "current" | "previous";
-  total_reservations: number;
+  total_bookings: number;
   total_guests: number;
   average_guests: number;
+  reservation_rate: number;
   cancelled_reservations: number;
   cancellation_rate: number;
-  no_show_reservations: number;
-  no_show_rate: number;
 }
 
 export interface KpiData {
@@ -111,22 +112,20 @@ export interface DashboardData {
 export const SAMPLE_KPI_DATA: KpiData = {
   current: {
     period: "current",
-    total_reservations: 82,
+    total_bookings: 82,
     total_guests: 463,
     average_guests: 5.65,
+    reservation_rate: 76.83,
     cancelled_reservations: 11,
     cancellation_rate: 13.41,
-    no_show_reservations: 3,
-    no_show_rate: 3.66,
   },
   previous: {
     period: "previous",
-    total_reservations: 89,
+    total_bookings: 89,
     total_guests: 364,
     average_guests: 4.09,
+    reservation_rate: 71.91,
     cancelled_reservations: 8,
     cancellation_rate: 8.99,
-    no_show_reservations: 2,
-    no_show_rate: 2.25,
   },
 };

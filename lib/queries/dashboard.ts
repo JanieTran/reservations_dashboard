@@ -15,13 +15,38 @@ export type { DashboardData } from "./dashboard-types";
 
 // ---- query ----
 
-const DINE_IN_TYPE = "booking";
 const DASHBOARD_SQL = `
-  WITH filtered_bookings AS (
+  WITH location_tables AS (
+    SELECT 
+      SL.id AS service_location_id
+      ,COUNT(*) AS total_tables
+      ,COUNT(*) * 13.5 AS daily_table_hours  -- 10.30AM to 12AM
+    FROM public.tables AS TB
+    LEFT JOIN public.service_locations AS SL ON TB.service_location_id = SL.id
+    WHERE TB.status = 'active'
+    GROUP BY 1
+  )
+  ,booking_tables_count AS (
+    SELECT
+      BT.booking_id
+      ,COUNT(*) AS number_of_tables
+    FROM public.booking_tables AS BT
+    INNER JOIN public.bookings AS BK ON BT.booking_id = BK.id
+    WHERE
+      BK.is_test = FALSE
+      AND DATE(BK.reserved_at + INTERVAL '7 hours') BETWEEN $3 AND $2
+    GROUP BY 1
+  )
+  ,filtered_bookings AS (
     SELECT
       BK.status
       ,BK.number_of_people
+      ,BK.inserted_at + INTERVAL '7 hours' AS inserted_at
       ,BK.reserved_at + INTERVAL '7 hours' AS reserved_at
+      ,BK.completed_at + INTERVAL '7 hours' AS completed_at
+      ,COALESCE(INITCAP(REPLACE(BK.dine_in_type, '_', ' ')), 'Booking') AS dine_in_type
+      ,INITCAP(REPLACE(BK.event_type, '_', ' ')) AS event_type
+      ,INITCAP(REPLACE(BK.banquet_type, '_', ' ')) AS banquet_type
       ,EXTRACT(ISODOW FROM BK.reserved_at) AS weekday
       ,CONCAT(EXTRACT(ISODOW FROM BK.reserved_at), ' - ', LEFT(TO_CHAR(BK.reserved_at, 'Day'), 3)) AS weekday_char
       ,EXTRACT(HOUR FROM BK.reserved_at + INTERVAL '7 hours')   AS hour
@@ -56,10 +81,37 @@ const DASHBOARD_SQL = `
         ELSE 'Returning'
       END AS customer_type
       ,CASE
-        WHEN LOWER(SPLIT_PART(BK.guest_fullname, ' ', 1)) IN ('anh', 'mr') THEN 'Male'
-        WHEN LOWER(SPLIT_PART(BK.guest_fullname, ' ', 1)) IN ('chi', 'chị', 'ms') THEN 'Female'
+        WHEN LOWER(SPLIT_PART(BK.guest_fullname, ' ', 1)) IN ('anh', 'mr', 'mr.', 'a') THEN 'Male'
+        WHEN LOWER(SPLIT_PART(BK.guest_fullname, ' ', 1)) IN ('chi', 'chị', 'ms', 'ms.', 'c') THEN 'Female'
         ELSE NULL
       END AS booking_customer_gender
+      ,LT.daily_table_hours
+      ,COALESCE(BT.number_of_tables, CEIL(number_of_people / 4.0)) AS number_of_tables
+      ,CASE
+        WHEN BK.completed_at < BK.reserved_at THEN 2
+        ELSE EXTRACT(EPOCH FROM BK.completed_at - BK.reserved_at) / 3600.0
+      END AS occupied_hours
+      ,CASE
+        WHEN BK.completed_at < BK.reserved_at THEN 2 * COALESCE(BT.number_of_tables, CEIL(number_of_people / 4.0))
+        ELSE EXTRACT(EPOCH FROM BK.completed_at - BK.reserved_at) / 3600.0
+              * COALESCE(BT.number_of_tables, CEIL(number_of_people / 4.0))
+      END AS occupied_table_hours
+      ,RR.total_amount - RR.total_tax_amount AS revenue
+      ,CASE
+        WHEN BK.guest_fullname ~* '[ăâđêôơưáàảãạắằẳẵặấầẩẫậéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵđ]' THEN 'Vietnamese'
+        WHEN LOWER(SPLIT_PART(BK.guest_fullname, ' ', 1)) IN ('anh', 'chị', 'chị', 'a', 'c') THEN 'Vietnamese'
+        WHEN LENGTH(BK.guest_fullname) > 2 THEN 'Foreigner'
+        ELSE NULL
+      END AS guest_nationality
+      -- Roughly infer KOLs if name contains 'tiktoker'
+      ,CASE
+        WHEN BK.guest_fullname ~* 'tiktoker' THEN 1
+        ELSE 0
+      END AS is_kol
+      ,CASE
+        WHEN BK.guest_fullname !~* 'tiktoker' THEN 1
+        ELSE 0
+      END AS is_not_kol
       ,CASE
         WHEN DATE(BK.reserved_at + INTERVAL '7 hours')
           BETWEEN $1 AND $2
@@ -71,18 +123,21 @@ const DASHBOARD_SQL = `
     FROM public.bookings AS BK
     LEFT JOIN public.merchants AS MC ON BK.merchant_id = MC.id
     LEFT JOIN public.service_locations AS SL ON BK.service_location_id = SL.id
+    LEFT JOIN location_tables AS LT ON BK.service_location_id = LT.service_location_id
+    LEFT JOIN booking_tables_count AS BT ON BK.id = BT.booking_id
+    LEFT JOIN public.restaurant_reports AS RR ON BK.id = RR.booking_id
     WHERE
       BK.is_test = FALSE
       AND DATE(BK.reserved_at + INTERVAL '7 hours') BETWEEN $3 AND $2
-      AND BK.dine_in_type = '${DINE_IN_TYPE}'
   )
   ,daily AS (
     SELECT
-      DATE(reserved_at) AS date
+      period
+      ,DATE(reserved_at) AS date
       ,COUNT(*) AS reservations
       ,SUM(number_of_people) AS guests
     FROM filtered_bookings
-    GROUP BY 1
+    GROUP BY 1,2
   )
   ,heatmap AS (
     SELECT
@@ -91,18 +146,20 @@ const DASHBOARD_SQL = `
       ,EXTRACT(HOUR FROM reserved_at)   AS hour
       ,COUNT(*)                         AS reservations
     FROM filtered_bookings
+    WHERE period = 'current'
     GROUP BY 1, 2, 3
   )
   ,kpi AS (
     SELECT
       period
-      ,COUNT(*) AS total_reservations
+      ,COUNT(*) AS total_bookings
       ,COALESCE(SUM(number_of_people), 0) AS total_guests
       ,ROUND(AVG(number_of_people), 2) AS average_guests
-      ,COUNT(*) FILTER (WHERE is_cancelled = 1) AS cancelled_reservations
-      ,ROUND(AVG(is_cancelled) * 100, 2) AS cancellation_rate
-      ,COUNT(*) FILTER (WHERE is_no_show = 1) AS no_show_reservations
-      ,ROUND(AVG(is_no_show) * 100, 2) AS no_show_rate
+      ,COUNT(*) FILTER (WHERE dine_in_type = 'Booking') AS total_reservations
+      ,ROUND(COUNT(*) FILTER (WHERE dine_in_type = 'Booking')::NUMERIC
+        / NULLIF(COUNT(*), 0) * 100, 2) AS reservation_rate
+      ,COUNT(*) FILTER (WHERE is_cancelled_or_no_show = 1) AS cancelled_reservations
+      ,ROUND(AVG(is_cancelled_or_no_show) * 100, 2) AS cancellation_rate
     FROM filtered_bookings
     GROUP BY 1
   )

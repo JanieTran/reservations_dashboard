@@ -24,29 +24,29 @@ const KPI_CONFIG: Array<{
   goodWhenUp: boolean;
 }> = [
   {
-    label: "Reservations",
-    key: "total_reservations",
+    label: "Total Bookings",
+    key: "total_bookings",
     format: formatCount,
     deltaKind: "percent",
     goodWhenUp: true,
   },
   {
-    label: "Guests",
+    label: "Reservation Rate",
+    key: "reservation_rate",
+    format: formatPercent,
+    deltaKind: "points",
+    goodWhenUp: true,
+  },
+  {
+    label: "Total Guests",
     key: "total_guests",
     format: formatCount,
     deltaKind: "percent",
     goodWhenUp: true,
   },
   {
-    label: "Cancellation Rate",
+    label: "Cancellation / No-show Rate",
     key: "cancellation_rate",
-    format: formatPercent,
-    deltaKind: "points",
-    goodWhenUp: false,
-  },
-  {
-    label: "No-show Rate",
-    key: "no_show_rate",
     format: formatPercent,
     deltaKind: "points",
     goodWhenUp: false,

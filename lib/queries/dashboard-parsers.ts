@@ -48,26 +48,24 @@ export function heatmapFromRows(rows: HeatmapRow[]): HeatmapPoint[] {
 function zeroedPeriod(period: "current" | "previous"): KpiPeriod {
   return {
     period,
-    total_reservations: 0,
+    total_bookings: 0,
     total_guests: 0,
     average_guests: 0,
+    reservation_rate: 0,
     cancelled_reservations: 0,
     cancellation_rate: 0,
-    no_show_reservations: 0,
-    no_show_rate: 0,
   };
 }
 
 function toKpiPeriod(row: KpiRow): KpiPeriod {
   return {
     period: row.period,
-    total_reservations: toNumber(row.total_reservations),
+    total_bookings: toNumber(row.total_bookings),
     total_guests: toNumber(row.total_guests),
-    average_guests: toNumber(row.average_guests),
+    average_guests: toNumber(row.average_guests ?? 0),
+    reservation_rate: toNumber(row.reservation_rate),
     cancelled_reservations: toNumber(row.cancelled_reservations),
     cancellation_rate: toNumber(row.cancellation_rate),
-    no_show_reservations: toNumber(row.no_show_reservations),
-    no_show_rate: toNumber(row.no_show_rate),
   };
 }
 
