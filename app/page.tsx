@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 
-import BookingBehaviourTab from "@/components/dashboard/booking-behaviour-tab";
 import CustomersTab from "@/components/dashboard/customers-tab";
 import DashboardShell from "@/components/dashboard/dashboard-shell";
 import type { DashboardTab } from "@/components/dashboard/dashboard-sidebar";
 import OverviewTab from "@/components/dashboard/overview-tab";
+import ReservationsTab from "@/components/dashboard/reservations-tab";
 import {
   Card,
   CardContent,
@@ -23,7 +23,7 @@ interface DashboardPageProps {
 function isDashboardTab(value: string | undefined): value is DashboardTab {
   return (
     value === "overview" ||
-    value === "booking-behaviour" ||
+    value === "reservations" ||
     value === "customers"
   );
 }
@@ -53,8 +53,8 @@ export default async function DashboardPage({
       {dashboard ? (
         activeTab === "overview" ? (
           <OverviewTab data={dashboard} />
-        ) : activeTab === "booking-behaviour" ? (
-          <BookingBehaviourTab data={dashboard} />
+        ) : activeTab === "reservations" ? (
+          <ReservationsTab data={dashboard} />
         ) : (
           <CustomersTab data={dashboard} />
         )

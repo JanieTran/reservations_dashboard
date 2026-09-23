@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
-export type DashboardTab = "overview" | "booking-behaviour" | "customers";
+export type DashboardTab = "overview" | "reservations" | "customers";
 
 interface DashboardSidebarProps {
   activeTab: DashboardTab;
@@ -27,8 +27,8 @@ const navigation: {
 }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   {
-    id: "booking-behaviour",
-    label: "Booking Behaviour",
+    id: "reservations",
+    label: "Reservations",
     icon: BarChart3,
   },
   { id: "customers", label: "Customers", icon: Users },

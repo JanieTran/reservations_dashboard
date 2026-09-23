@@ -35,11 +35,11 @@ function formatTick(value: string): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-interface ReservationsTrendProps {
+interface DailyTrendProps {
   data: DailyPoint[];
 }
 
-export default function ReservationsTrend({ data }: ReservationsTrendProps) {
+export default function DailyTrend({ data }: DailyTrendProps) {
   const [metric, setMetric] = useState<Metric>("bookings");
   const active = METRICS.find((m) => m.key === metric) ?? METRICS[0];
 
