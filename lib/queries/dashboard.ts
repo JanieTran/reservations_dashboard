@@ -6,6 +6,7 @@ import {
   breakdownFromRows,
   cancelRatesFromRows,
   cancelReasonsCountFromRows,
+  customerTypeByLocationFromRows,
   dailyFromRows,
   heatmapFromRows,
   kpisFromRows,
@@ -166,6 +167,16 @@ const DASHBOARD_SQL = `
     FROM filtered_bookings
     GROUP BY 1
   )
+  ,service_locations AS (
+    SELECT
+      service_location_name
+      ,COUNT(*) AS reservations
+    FROM filtered_bookings
+    WHERE service_location_name IS NOT NULL
+      AND TRIM(service_location_name) <> ''
+      AND period = 'current'
+    GROUP BY 1
+  )
   ,party_size AS (
     SELECT
       COALESCE(banquet_type, 'Dine In') AS banquet_type
@@ -270,19 +281,20 @@ const DASHBOARD_SQL = `
   )
   ,customer_types AS (
     SELECT
-      customer_type
-      ,COUNT(*) AS reservations
+      service_location_name
+      ,COUNT(*) FILTER (WHERE customer_type = 'New') AS new_count
+      ,COUNT(*) FILTER (WHERE customer_type = 'Returning') AS returning_count
+      ,ROUND(
+          100.0 * COUNT(*) FILTER (WHERE customer_type = 'New')
+          / NULLIF(COUNT(*), 0)
+        , 2) AS new_rate
+      ,ROUND(
+          100.0 * COUNT(*) FILTER (WHERE customer_type = 'Returning')
+          / NULLIF(COUNT(*), 0)
+        , 2) AS returning_rate
     FROM filtered_bookings
     WHERE customer_type IS NOT NULL
-    GROUP BY 1
-  )
-  ,service_locations AS (
-    SELECT
-      service_location_name
-      ,COUNT(*) AS reservations
-    FROM filtered_bookings
-    WHERE service_location_name IS NOT NULL
-      AND TRIM(service_location_name) <> ''
+      AND period = 'current'
     GROUP BY 1
   )
   ,booking_customer_genders AS (
@@ -322,7 +334,7 @@ const DASHBOARD_SQL = `
       ,'cancel_reasons_count'
       ,(SELECT json_agg(cancel_reasons_count ORDER BY reservations DESC) FROM cancel_reasons_count)
       ,'customer_type'
-      ,(SELECT json_agg(customer_types ORDER BY reservations DESC) FROM customer_types)
+      ,(SELECT json_agg(customer_types ORDER BY new_rate DESC) FROM customer_types)
       ,'service_location'
       ,(SELECT json_agg(service_locations ORDER BY reservations DESC, service_location_name) FROM service_locations)
       ,'booking_customer_gender'
@@ -394,7 +406,7 @@ export async function getDashboardData(
     booking_channel_rate: bookingChannelRatesFromRows(
       payload?.booking_channel_rate ?? []
     ),
-    customer_type: breakdownFromRows(payload?.customer_type ?? [], "customer_type"),
+    customer_type: customerTypeByLocationFromRows(payload?.customer_type ?? []),
     service_location: breakdownFromRows(
       payload?.service_location ?? [],
       "service_location_name"

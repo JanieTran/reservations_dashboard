@@ -54,6 +54,17 @@ export interface CancelReasonsCountRow {
   reservations: number | string | null;
 }
 
+export interface CustomerTypeLocationRow {
+  service_location_name?: string;
+  new?: number | string | null;
+  returning?: number | string | null;
+  new_count?: number | string | null;
+  returning_count?: number | string | null;
+  new_rate?: number | string | null;
+  returning_rate?: number | string | null;
+  new_customer_rate?: number | string | null;
+}
+
 // ---- normalized dashboard data ----
 
 export interface BreakdownPoint {
@@ -106,6 +117,15 @@ export interface CancelRatePoint {
   cancel_rate: number;
 }
 
+export interface CustomerTypeLocationPoint {
+  [key: string]: string | number | undefined;
+  service_location_name: string;
+  new_count: number;
+  returning_count: number;
+  new_rate: number;
+  returning_rate: number;
+}
+
 export interface DashboardPayload {
   kpi: KpiRow[];
   daily: DailyRow[];
@@ -121,7 +141,7 @@ export interface DashboardPayload {
   cancel_by_banquet_type: CancelRateRow[];
   cancel_reasons_count: CancelReasonsCountRow[];
   booking_channel_rate: BookingChannelRateRow[];
-  customer_type: BreakdownRow[];
+  customer_type: CustomerTypeLocationRow[];
   service_location: BreakdownRow[];
   booking_customer_gender: BreakdownRow[];
 }
@@ -141,7 +161,7 @@ export interface DashboardData {
   cancel_by_banquet_type: CancelRatePoint[];
   cancel_reasons_count: BreakdownPoint[];
   booking_channel_rate: BookingChannelRatePoint[];
-  customer_type: BreakdownPoint[];
+  customer_type: CustomerTypeLocationPoint[];
   service_location: BreakdownPoint[];
   booking_customer_gender: BreakdownPoint[];
 }

@@ -6,6 +6,8 @@ import type {
   CancelRatePoint,
   CancelRateRow,
   CancelReasonsCountRow,
+  CustomerTypeLocationPoint,
+  CustomerTypeLocationRow,
   DailyPoint,
   DailyRow,
   HeatmapPoint,
@@ -132,4 +134,19 @@ export function cancelReasonsCountFromRows(
     label: String(row.cancel_reason ?? "Unknown"),
     reservations: toNumber(row.reservations),
   }));
+}
+
+export function customerTypeByLocationFromRows(
+  rows: CustomerTypeLocationRow[]
+): CustomerTypeLocationPoint[] {
+  return rows
+    .map((row) => {
+      return {
+        service_location_name: String(row.service_location_name ?? "Unknown"),
+        new_count: toNumber(row.new_count ?? 0),
+        returning_count: toNumber(row.returning_count ?? 0),
+        new_rate: toNumber(row.new_rate ?? 0),
+        returning_rate: toNumber(row.returning_rate ?? 0),
+      };
+    })
 }
