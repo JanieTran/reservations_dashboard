@@ -5,6 +5,7 @@ import {
   bookingChannelRatesFromRows,
   breakdownFromRows,
   cancelRatesFromRows,
+  cancelReasonsCountFromRows,
   dailyFromRows,
   heatmapFromRows,
   kpisFromRows,
@@ -77,6 +78,7 @@ const DASHBOARD_SQL = `
         WHEN BK.status IN ('cancelled', 'no_show') THEN 1
         ELSE 0
       END AS is_cancelled_or_no_show
+      ,BK.cancelled_reason
       ,CASE
         WHEN BK.customer_id IS NULL THEN 'New'
         ELSE 'Returning'
@@ -233,6 +235,39 @@ const DASHBOARD_SQL = `
       AND TRIM(booking_channel) <> ''
     GROUP BY 1
   )
+  ,cancel_by_event_type AS (
+    SELECT
+      event_type
+      ,ROUND(AVG(is_cancelled_or_no_show) * 100, 2) AS cancel_rate
+    FROM filtered_bookings
+    WHERE period = 'current'
+      AND dine_in_type = 'Booking'
+      AND event_type IS NOT NULL
+      AND TRIM(event_type) <> ''
+    GROUP BY 1
+  )
+  ,cancel_by_banquet_type AS (
+    SELECT
+      banquet_type
+      ,ROUND(AVG(is_cancelled_or_no_show) * 100, 2) AS cancel_rate
+    FROM filtered_bookings
+    WHERE period = 'current'
+      AND dine_in_type = 'Booking'
+      AND banquet_type IS NOT NULL
+      AND TRIM(banquet_type) <> ''
+    GROUP BY 1
+  )
+  ,cancel_reasons_count AS (
+    SELECT
+      cancelled_reason AS cancel_reason
+      ,COUNT(*) AS reservations
+    FROM filtered_bookings
+    WHERE period = 'current'
+      AND dine_in_type = 'Booking'
+      AND cancelled_reason IS NOT NULL
+      AND TRIM(cancelled_reason) <> ''
+    GROUP BY 1
+  )
   ,customer_types AS (
     SELECT
       customer_type
@@ -280,6 +315,12 @@ const DASHBOARD_SQL = `
       ,(SELECT json_agg(cancel_by_location ORDER BY cancel_rate DESC) FROM cancel_by_location)
       ,'cancel_by_channel'
       ,(SELECT json_agg(cancel_by_channel ORDER BY cancel_rate DESC) FROM cancel_by_channel)
+      ,'cancel_by_event_type'
+      ,(SELECT json_agg(cancel_by_event_type ORDER BY cancel_rate DESC) FROM cancel_by_event_type)
+      ,'cancel_by_banquet_type'
+      ,(SELECT json_agg(cancel_by_banquet_type ORDER BY cancel_rate DESC) FROM cancel_by_banquet_type)
+      ,'cancel_reasons_count'
+      ,(SELECT json_agg(cancel_reasons_count ORDER BY reservations DESC) FROM cancel_reasons_count)
       ,'customer_type'
       ,(SELECT json_agg(customer_types ORDER BY reservations DESC) FROM customer_types)
       ,'service_location'
@@ -338,6 +379,17 @@ export async function getDashboardData(
     cancel_by_channel: cancelRatesFromRows(
       payload?.cancel_by_channel ?? [],
       "booking_channel"
+    ),
+    cancel_by_event_type: cancelRatesFromRows(
+      payload?.cancel_by_event_type ?? [],
+      "event_type"
+    ),
+    cancel_by_banquet_type: cancelRatesFromRows(
+      payload?.cancel_by_banquet_type ?? [],
+      "banquet_type"
+    ),
+    cancel_reasons_count: cancelReasonsCountFromRows(
+      payload?.cancel_reasons_count ?? []
     ),
     booking_channel_rate: bookingChannelRatesFromRows(
       payload?.booking_channel_rate ?? []

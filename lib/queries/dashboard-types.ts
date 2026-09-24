@@ -44,7 +44,14 @@ export interface BookingChannelRateRow {
 export interface CancelRateRow {
   booking_channel?: string;
   service_location_name?: string;
+  event_type?: string;
+  banquet_type?: string;
   cancel_rate: number | string | null;
+}
+
+export interface CancelReasonsCountRow {
+  cancel_reason?: string;
+  reservations: number | string | null;
 }
 
 // ---- normalized dashboard data ----
@@ -110,6 +117,9 @@ export interface DashboardPayload {
   resv_lead_time: BreakdownRow[];
   cancel_by_location: CancelRateRow[];
   cancel_by_channel: CancelRateRow[];
+  cancel_by_event_type: CancelRateRow[];
+  cancel_by_banquet_type: CancelRateRow[];
+  cancel_reasons_count: CancelReasonsCountRow[];
   booking_channel_rate: BookingChannelRateRow[];
   customer_type: BreakdownRow[];
   service_location: BreakdownRow[];
@@ -127,6 +137,9 @@ export interface DashboardData {
   resv_lead_time: BreakdownPoint[];
   cancel_by_location: CancelRatePoint[];
   cancel_by_channel: CancelRatePoint[];
+  cancel_by_event_type: CancelRatePoint[];
+  cancel_by_banquet_type: CancelRatePoint[];
+  cancel_reasons_count: BreakdownPoint[];
   booking_channel_rate: BookingChannelRatePoint[];
   customer_type: BreakdownPoint[];
   service_location: BreakdownPoint[];

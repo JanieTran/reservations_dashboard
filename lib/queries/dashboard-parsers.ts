@@ -5,6 +5,7 @@ import type {
   BreakdownRow,
   CancelRatePoint,
   CancelRateRow,
+  CancelReasonsCountRow,
   DailyPoint,
   DailyRow,
   HeatmapPoint,
@@ -116,10 +117,19 @@ export function bookingChannelRatesFromRows(
 
 export function cancelRatesFromRows(
   rows: CancelRateRow[],
-  labelKey: "booking_channel" | "service_location_name"
+  labelKey: "booking_channel" | "service_location_name" | "event_type" | "banquet_type"
 ): CancelRatePoint[] {
   return rows.map((row) => ({
     label: String(row[labelKey] ?? "Unknown"),
     cancel_rate: toNumber(row.cancel_rate),
+  }));
+}
+
+export function cancelReasonsCountFromRows(
+  rows: CancelReasonsCountRow[]
+): BreakdownPoint[] {
+  return rows.map((row) => ({
+    label: String(row.cancel_reason ?? "Unknown"),
+    reservations: toNumber(row.reservations),
   }));
 }
