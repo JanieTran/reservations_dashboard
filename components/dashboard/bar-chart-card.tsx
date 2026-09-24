@@ -43,6 +43,7 @@ interface BarChartCardProps<T extends object> {
     bottom?: number;
   };
   showValueLabels?: boolean;
+  layout?: "vertical" | "horizontal";
 }
 
 export default function BarChartCard<T extends object>({
@@ -62,6 +63,7 @@ export default function BarChartCard<T extends object>({
   xTextAnchor,
   margin,
   showValueLabels = true,
+  layout = "vertical",
 }: BarChartCardProps<T>) {
   const formatNumber = (value: number | string) => {
     const numeric = Number(value ?? 0);
@@ -87,6 +89,8 @@ export default function BarChartCard<T extends object>({
   };
 
   const formatValueLabel = (value: any) => formatNumber(value);
+  const isHorizontal = layout === "horizontal";
+
   if (data.length === 0) {
     return (
       <Card>
@@ -110,33 +114,70 @@ export default function BarChartCard<T extends object>({
       <CardContent>
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={margin ?? { top: 16, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid stroke="var(--border)" vertical={false} />
-              <XAxis
-                dataKey={xKey}
-                angle={xAngle}
-                height={xHeight}
-                textAnchor={xTextAnchor}
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                stroke="var(--muted-foreground)"
-                fontSize={12}
+            <BarChart
+              data={data}
+              layout={isHorizontal ? "vertical" : "horizontal"}
+              margin={margin ?? { top: 16, right: 8, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid
+                stroke="var(--border)"
+                vertical={isHorizontal ? true : false}
+                horizontal={isHorizontal ? false : true}
               />
-              <YAxis
-                allowDecimals={true}
-                domain={yDomain}
-                tickFormatter={(value) =>
-                  valueFormat === "percent"
-                    ? `${Number(value).toFixed(1)}%`
-                    : String(value)
-                }
-                tickLine={false}
-                axisLine={false}
-                width={44}
-                stroke="var(--muted-foreground)"
-                fontSize={12}
-              />
+              {isHorizontal ? (
+                <>
+                  <XAxis
+                    type="number"
+                    domain={yDomain}
+                    tickFormatter={(value) =>
+                      valueFormat === "percent"
+                        ? `${Number(value).toFixed(1)}%`
+                        : String(value)
+                    }
+                    tickLine={false}
+                    axisLine={false}
+                    stroke="var(--muted-foreground)"
+                    fontSize={12}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey={xKey}
+                    width={90}
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+                    interval={0}
+                  />
+                </>
+              ) : (
+                <>
+                  <XAxis
+                    dataKey={xKey}
+                    angle={xAngle}
+                    height={xHeight}
+                    textAnchor={xTextAnchor}
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    stroke="var(--muted-foreground)"
+                    fontSize={12}
+                  />
+                  <YAxis
+                    allowDecimals={true}
+                    domain={yDomain}
+                    tickFormatter={(value) =>
+                      valueFormat === "percent"
+                        ? `${Number(value).toFixed(1)}%`
+                        : String(value)
+                    }
+                    tickLine={false}
+                    axisLine={false}
+                    width={44}
+                    stroke="var(--muted-foreground)"
+                    fontSize={12}
+                  />
+                </>
+              )}
               <Tooltip
                 formatter={formatTooltipValue}
                 cursor={{ fill: "var(--muted)" }}
@@ -144,14 +185,14 @@ export default function BarChartCard<T extends object>({
               <Bar
                 dataKey={valueKey}
                 fill={barColor ?? "var(--chart-2)"}
-                radius={[4, 4, 0, 0]}
+                radius={isHorizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]}
                 maxBarSize={maxBarSize ?? 48}
                 name={barName ?? valueKey}
               >
                 {showValueLabels && (
                   <LabelList
                     dataKey={valueKey}
-                    position="top"
+                    position={isHorizontal ? "right" : "top"}
                     formatter={formatValueLabel}
                     fill="var(--muted-foreground)"
                     fontSize={11}

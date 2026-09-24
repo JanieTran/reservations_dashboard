@@ -41,6 +41,12 @@ export interface BookingChannelRateRow {
   cancel_or_no_show_rate: number | string | null;
 }
 
+export interface CancelRateRow {
+  booking_channel?: string;
+  service_location_name?: string;
+  cancel_rate: number | string | null;
+}
+
 // ---- normalized dashboard data ----
 
 export interface BreakdownPoint {
@@ -88,6 +94,11 @@ export interface BookingChannelRatePoint {
   cancel_or_no_show_rate: number;
 }
 
+export interface CancelRatePoint {
+  label: string;
+  cancel_rate: number;
+}
+
 export interface DashboardPayload {
   kpi: KpiRow[];
   daily: DailyRow[];
@@ -97,6 +108,8 @@ export interface DashboardPayload {
   banquet_type: BreakdownRow[];
   resv_day_of_week: BreakdownRow[];
   resv_lead_time: BreakdownRow[];
+  cancel_by_location: CancelRateRow[];
+  cancel_by_channel: CancelRateRow[];
   booking_channel_rate: BookingChannelRateRow[];
   customer_type: BreakdownRow[];
   service_location: BreakdownRow[];
@@ -112,6 +125,8 @@ export interface DashboardData {
   banquet_type: BreakdownPoint[];
   resv_day_of_week: BreakdownPoint[];
   resv_lead_time: BreakdownPoint[];
+  cancel_by_location: CancelRatePoint[];
+  cancel_by_channel: CancelRatePoint[];
   booking_channel_rate: BookingChannelRatePoint[];
   customer_type: BreakdownPoint[];
   service_location: BreakdownPoint[];

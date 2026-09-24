@@ -7,18 +7,27 @@ interface CancellationTabProps {
 
 export default function CancellationTab({ data }: CancellationTabProps) {
   return (
-    <section className="grid min-w-0 gap-4 lg:grid-cols-1">
+    <section className="grid min-w-0 gap-4 lg:grid-cols-2">
       <BarChartCard
-        title="Cancellation and No-Show Rate"
-        description="Combined rate by booking source"
-        data={data.booking_channel_rate}
-        xKey="booking_channel"
-        valueKey="cancel_or_no_show_rate"
-        barName="Cancel / no-show rate"
-        yDomain={[0, 100]}
+        title="By Channels"
+        description="Cancellation + no-show rate by booking sources"
+        data={data.cancel_by_channel}
+        xKey="label"
+        valueKey="cancel_rate"
+        barName="Cancellation rate"
         valueFormat="percent"
-        xAngle={-20}
-        tooltipLabel="Cancel / no-show rate"
+        tooltipLabel="Cancellation rate"
+      />
+      <BarChartCard
+        title="By Locations"
+        description="Cancellation + no-show rate by service locations"
+        data={data.cancel_by_location}
+        xKey="label"
+        valueKey="cancel_rate"
+        barName="Cancellation rate"
+        valueFormat="percent"
+        tooltipLabel="Cancellation rate"
+        layout="horizontal"
       />
     </section>
   );

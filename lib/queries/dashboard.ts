@@ -4,6 +4,7 @@ import { toDateKey, type DateRange } from "@/lib/ranges";
 import {
   bookingChannelRatesFromRows,
   breakdownFromRows,
+  cancelRatesFromRows,
   dailyFromRows,
   heatmapFromRows,
   kpisFromRows,
@@ -212,12 +213,23 @@ const DASHBOARD_SQL = `
       AND dine_in_type = 'Booking'
     GROUP BY 1, 2
   )
-  ,booking_channel_rates AS (
+  ,cancel_by_location AS (
+    SELECT
+      service_location_name
+      ,ROUND(AVG(is_cancelled_or_no_show) * 100, 2) AS cancel_rate
+    FROM filtered_bookings
+    WHERE period = 'current'
+      AND dine_in_type = 'Booking'
+    GROUP BY 1
+  )
+  ,cancel_by_channel AS (
     SELECT
       booking_channel
-      ,ROUND(AVG(is_cancelled_or_no_show) * 100, 2) AS cancel_or_no_show_rate
+      ,ROUND(AVG(is_cancelled_or_no_show) * 100, 2) AS cancel_rate
     FROM filtered_bookings
-    WHERE booking_channel IS NOT NULL
+    WHERE period = 'current'
+      AND dine_in_type = 'Booking'
+      AND booking_channel IS NOT NULL
       AND TRIM(booking_channel) <> ''
     GROUP BY 1
   )
@@ -264,8 +276,10 @@ const DASHBOARD_SQL = `
       ,(SELECT json_agg(resv_day_of_week ORDER BY weekday) FROM resv_day_of_week)
       ,'resv_lead_time'
       ,(SELECT json_agg(resv_lead_time ORDER BY lead_time_idx) FROM resv_lead_time)
-      ,'booking_channel_rate'
-      ,(SELECT json_agg(booking_channel_rates ORDER BY booking_channel) FROM booking_channel_rates)
+      ,'cancel_by_location'
+      ,(SELECT json_agg(cancel_by_location ORDER BY cancel_rate DESC) FROM cancel_by_location)
+      ,'cancel_by_channel'
+      ,(SELECT json_agg(cancel_by_channel ORDER BY cancel_rate DESC) FROM cancel_by_channel)
       ,'customer_type'
       ,(SELECT json_agg(customer_types ORDER BY reservations DESC) FROM customer_types)
       ,'service_location'
@@ -316,6 +330,14 @@ export async function getDashboardData(
     resv_lead_time: breakdownFromRows(
       payload?.resv_lead_time ?? [],
       "lead_time_label"
+    ),
+    cancel_by_location: cancelRatesFromRows(
+      payload?.cancel_by_location ?? [],
+      "service_location_name"
+    ),
+    cancel_by_channel: cancelRatesFromRows(
+      payload?.cancel_by_channel ?? [],
+      "booking_channel"
     ),
     booking_channel_rate: bookingChannelRatesFromRows(
       payload?.booking_channel_rate ?? []
