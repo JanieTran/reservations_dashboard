@@ -96,6 +96,7 @@ export interface DashboardPayload {
   booking_channel: BreakdownRow[];
   banquet_type: BreakdownRow[];
   resv_day_of_week: BreakdownRow[];
+  resv_lead_time: BreakdownRow[];
   booking_channel_rate: BookingChannelRateRow[];
   customer_type: BreakdownRow[];
   service_location: BreakdownRow[];
@@ -110,6 +111,7 @@ export interface DashboardData {
   booking_channel: BreakdownPoint[];
   banquet_type: BreakdownPoint[];
   resv_day_of_week: BreakdownPoint[];
+  resv_lead_time: BreakdownPoint[];
   booking_channel_rate: BookingChannelRatePoint[];
   customer_type: BreakdownPoint[];
   service_location: BreakdownPoint[];

@@ -35,8 +35,17 @@ export default function ReservationsTab({ data }: ReservationsTabProps) {
       />
       <BarChartCard
         title="Reservations by Day of Week"
-        description="Booking volume by weekday for the selected period"
+        description="Booking volume by weekday"
         data={data.resv_day_of_week}
+        xKey="label"
+        valueKey="reservations"
+        barName="Reservations"
+        tooltipLabel="Reservations"
+      />
+      <BarChartCard
+        title="Reservations by Lead Time"
+        description="Guests book how far in advance"
+        data={data.resv_lead_time}
         xKey="label"
         valueKey="reservations"
         barName="Reservations"

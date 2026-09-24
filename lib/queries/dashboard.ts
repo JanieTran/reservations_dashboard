@@ -62,7 +62,7 @@ const DASHBOARD_SQL = `
         WHEN EXTRACT(EPOCH FROM (BK.reserved_at - BK.inserted_at)) / 86400.0 < 90 THEN '[5] 1 quarter'
         WHEN EXTRACT(EPOCH FROM (BK.reserved_at - BK.inserted_at)) / 86400.0 < 180 THEN '[6] Half year'
         WHEN EXTRACT(EPOCH FROM (BK.reserved_at - BK.inserted_at)) / 86400.0 < 365 THEN '[7] 1 year'
-        ELSE '8 - More than 1 year'
+        ELSE '[8] - More than 1 year'
       END AS lead_time
       ,CASE
         WHEN BK.status = 'cancelled' THEN 1
@@ -202,6 +202,16 @@ const DASHBOARD_SQL = `
       AND dine_in_type = 'Booking'
     GROUP BY 1, 2
   )
+  ,resv_lead_time AS (
+    SELECT
+      SUBSTR(lead_time, 2, 1) AS lead_time_idx
+      ,SUBSTR(lead_time, 5) AS lead_time_label
+      ,COUNT(*) AS reservations
+    FROM filtered_bookings
+    WHERE period = 'current'
+      AND dine_in_type = 'Booking'
+    GROUP BY 1, 2
+  )
   ,booking_channel_rates AS (
     SELECT
       booking_channel
@@ -252,6 +262,8 @@ const DASHBOARD_SQL = `
       ,(SELECT json_agg(banquet_type_dist ORDER BY reservations DESC) FROM banquet_type_dist)
       ,'resv_day_of_week'
       ,(SELECT json_agg(resv_day_of_week ORDER BY weekday) FROM resv_day_of_week)
+      ,'resv_lead_time'
+      ,(SELECT json_agg(resv_lead_time ORDER BY lead_time_idx) FROM resv_lead_time)
       ,'booking_channel_rate'
       ,(SELECT json_agg(booking_channel_rates ORDER BY booking_channel) FROM booking_channel_rates)
       ,'customer_type'
@@ -300,6 +312,10 @@ export async function getDashboardData(
     resv_day_of_week: breakdownFromRows(
       payload?.resv_day_of_week ?? [],
       "weekday_label"
+    ),
+    resv_lead_time: breakdownFromRows(
+      payload?.resv_lead_time ?? [],
+      "lead_time_label"
     ),
     booking_channel_rate: bookingChannelRatesFromRows(
       payload?.booking_channel_rate ?? []
