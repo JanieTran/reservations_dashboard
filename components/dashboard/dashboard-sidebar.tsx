@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
-import { BarChart3, LayoutDashboard, Users } from "lucide-react";
+import { CalendarCheck, LayoutDashboard, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +29,7 @@ const navigation: {
   {
     id: "reservations",
     label: "Reservations",
-    icon: BarChart3,
+    icon: CalendarCheck,
   },
   { id: "customers", label: "Customers", icon: Users },
 ];

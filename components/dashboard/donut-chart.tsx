@@ -65,7 +65,7 @@ export default function DonutChart({
       <CardContent>
         <div className="h-56 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 16, right: 16, bottom: 16, left: 16 }}>
+            <PieChart margin={{ top: 16, right: 16, bottom: 0, left: 16 }}>
               <Pie
                 data={data}
                 dataKey="reservations"
@@ -74,12 +74,12 @@ export default function DonutChart({
                 endAngle={-270}
                 innerRadius="40%"
                 outerRadius="80%"
-                paddingAngle={2}
+                paddingAngle={1}
                 stroke="var(--card)"
                 strokeWidth={1}
                 labelLine={false}
                 label={({ name, percent }) => {
-                  if (Math.round((percent ?? 0) * 100) < 10) {
+                  if (Math.round((percent ?? 0) * 100) < 5) {
                     return null;
                   }
                   const label = String(name ?? "");

@@ -192,6 +192,16 @@ const DASHBOARD_SQL = `
       AND banquet_type IS NOT NULL
     GROUP BY 1
   )
+  ,resv_day_of_week AS (
+    SELECT
+      weekday
+      ,LEFT(TO_CHAR(reserved_at, 'Day'), 3) AS weekday_label
+      ,COUNT(*) AS reservations
+    FROM filtered_bookings
+    WHERE period = 'current'
+      AND dine_in_type = 'Booking'
+    GROUP BY 1, 2
+  )
   ,booking_channel_rates AS (
     SELECT
       booking_channel
@@ -240,6 +250,8 @@ const DASHBOARD_SQL = `
       ,(SELECT json_agg(booking_channels ORDER BY reservations DESC) FROM booking_channels)
       ,'banquet_type'
       ,(SELECT json_agg(banquet_type_dist ORDER BY reservations DESC) FROM banquet_type_dist)
+      ,'resv_day_of_week'
+      ,(SELECT json_agg(resv_day_of_week ORDER BY weekday) FROM resv_day_of_week)
       ,'booking_channel_rate'
       ,(SELECT json_agg(booking_channel_rates ORDER BY booking_channel) FROM booking_channel_rates)
       ,'customer_type'
@@ -285,6 +297,10 @@ export async function getDashboardData(
       "booking_channel"
     ),
     banquet_type: breakdownFromRows(payload?.banquet_type ?? [], "banquet_type"),
+    resv_day_of_week: breakdownFromRows(
+      payload?.resv_day_of_week ?? [],
+      "weekday_label"
+    ),
     booking_channel_rate: bookingChannelRatesFromRows(
       payload?.booking_channel_rate ?? []
     ),

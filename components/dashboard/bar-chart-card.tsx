@@ -61,7 +61,7 @@ export default function BarChartCard<T extends object>({
   xHeight,
   xTextAnchor,
   margin,
-  showValueLabels = false,
+  showValueLabels = true,
 }: BarChartCardProps<T>) {
   const formatNumber = (value: number | string) => {
     const numeric = Number(value ?? 0);
