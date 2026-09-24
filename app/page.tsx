@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import CancellationTab from "@/components/dashboard/cancellation-tab";
 import CustomersTab from "@/components/dashboard/customers-tab";
 import DashboardShell from "@/components/dashboard/dashboard-shell";
 import type { DashboardTab } from "@/components/dashboard/dashboard-sidebar";
@@ -24,6 +25,7 @@ function isDashboardTab(value: string | undefined): value is DashboardTab {
   return (
     value === "overview" ||
     value === "reservations" ||
+    value === "cancellation" ||
     value === "customers"
   );
 }
@@ -55,6 +57,8 @@ export default async function DashboardPage({
           <OverviewTab data={dashboard} />
         ) : activeTab === "reservations" ? (
           <ReservationsTab data={dashboard} />
+        ) : activeTab === "cancellation" ? (
+          <CancellationTab data={dashboard} />
         ) : (
           <CustomersTab data={dashboard} />
         )

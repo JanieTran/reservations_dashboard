@@ -95,8 +95,8 @@ export default function BookingHeatmap({
           key={`${hour}-${w}`}
           title={`${dayLabel(w)} ${String(hour).padStart(2, "0")}:00 · ${
             value ?? 0
-          } ${value === 1 ? "reservation" : "reservations"}`}
-          aria-label={`${dayLabel(w)} ${hour}:00, ${value ?? 0} reservations`}
+          } ${value === 1 ? "booking" : "bookings"}`}
+          aria-label={`${dayLabel(w)} ${hour}:00, ${value ?? 0} bookings`}
           className={cn("h-8 rounded-sm", t === 0 && "bg-muted/60")}
           style={
             t > 0 ? { backgroundColor: cellColor(t) } : undefined

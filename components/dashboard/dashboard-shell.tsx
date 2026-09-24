@@ -11,6 +11,7 @@ interface DashboardShellProps {
 const tabLabels: Record<DashboardTab, string> = {
   overview: "Overview",
   reservations: "Reservations",
+  cancellation: "Cancellation",
   customers: "Customers",
 };
 

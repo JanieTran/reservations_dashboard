@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
-import { CalendarCheck, LayoutDashboard, Users } from "lucide-react";
+import { CalendarCheck, LayoutDashboard, ShieldAlert, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,11 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
-export type DashboardTab = "overview" | "reservations" | "customers";
+export type DashboardTab =
+  | "overview"
+  | "reservations"
+  | "cancellation"
+  | "customers";
 
 interface DashboardSidebarProps {
   activeTab: DashboardTab;
@@ -30,6 +34,11 @@ const navigation: {
     id: "reservations",
     label: "Reservations",
     icon: CalendarCheck,
+  },
+  {
+    id: "cancellation",
+    label: "Cancellation",
+    icon: ShieldAlert,
   },
   { id: "customers", label: "Customers", icon: Users },
 ];

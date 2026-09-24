@@ -20,6 +20,7 @@ export default function OverviewTab({ data }: OverviewTabProps) {
         />
         <DonutChart
           title="Service Location"
+          description="Bookings by service location"
           data={data.service_location}
         />
       </section>
