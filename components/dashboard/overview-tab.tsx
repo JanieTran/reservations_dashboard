@@ -5,6 +5,7 @@ import HeatmapCard, {
 import DailyTrend from "@/components/dashboard/daily-trend";
 import DonutChart from "@/components/dashboard/donut-chart";
 import KpiGrid from "@/components/dashboard/kpi-grid";
+import StackedBarCard from "@/components/dashboard/stacked-bar-chart-card";
 import type { DashboardData } from "@/lib/queries/dashboard";
 import type {
   HeatmapPoint,
@@ -125,6 +126,17 @@ export default function OverviewTab({ data }: OverviewTabProps) {
           rowHeaderWidth="9rem"
           columnWidth="2.75rem"
           scrollable
+        />
+        <StackedBarCard
+          title="Event Type by Location"
+          description="Share of banquet and dine-in bookings by service location"
+          data={data.event_type_by_location}
+          xKey="service_location_name"
+          stackKeys={["banquet_rate", "dine_in_rate"]}
+          stackLabels={{ banquet_rate: "Banquet", dine_in_rate: "Dine In" }}
+          valueMode="percent"
+          yDomain={[0, 100]}
+          layout="horizontal"
         />
       </section>
     </div>

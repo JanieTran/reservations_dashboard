@@ -12,6 +12,7 @@ import {
   customerTypeByChannelFromRows,
   customerTypeByLocationFromRows,
   dailyFromRows,
+  eventTypeByLocationFromRows,
   heatmapFromRows,
   kpisFromRows,
   partySizeFromRows,
@@ -179,6 +180,24 @@ const DASHBOARD_SQL = `
       ,COUNT(*) FILTER (WHERE is_cancelled_or_no_show = 1) AS cancelled_reservations
       ,ROUND(AVG(is_cancelled_or_no_show) * 100, 2) AS cancellation_rate
     FROM filtered_bookings
+    GROUP BY 1
+  )
+  ,event_type_by_location AS (
+    SELECT
+      service_location_name
+      ,COUNT(*) FILTER (WHERE event_type = 'Banquet') AS banquet_count
+      ,COUNT(*) FILTER (WHERE event_type = 'Dine In') AS dine_in_count
+      ,ROUND(
+          100.0 * COUNT(*) FILTER (WHERE event_type = 'Banquet')
+          / NULLIF(COUNT(*), 0)
+        , 2) AS banquet_rate
+      ,ROUND(
+          100.0 * COUNT(*) FILTER (WHERE event_type = 'Dine In')
+          / NULLIF(COUNT(*), 0)
+        , 2) AS dine_in_rate
+    FROM filtered_bookings
+    WHERE event_type IS NOT NULL
+      AND period = 'current'
     GROUP BY 1
   )
   ,service_locations AS (
@@ -370,6 +389,7 @@ const DASHBOARD_SQL = `
     ,(SELECT json_agg(daily ORDER BY date) FROM daily) AS daily
     ,(SELECT json_agg(heatmap ORDER BY weekday, hour) FROM heatmap) AS heatmap
     ,(SELECT json_agg(table_utilisation_heatmap ORDER BY booking_date) FROM table_utilisation_heatmap) AS table_utilisation_heatmap
+    ,(SELECT json_agg(event_type_by_location ORDER BY banquet_rate DESC) FROM event_type_by_location) AS event_type_by_location
     ,(SELECT json_agg(party_size ORDER BY average_party_size) FROM party_size) AS party_size
     ,(SELECT json_agg(booking_channels ORDER BY reservations DESC) FROM booking_channels) AS booking_channel
     ,(SELECT json_agg(banquet_type_dist ORDER BY reservations DESC) FROM banquet_type_dist) AS banquet_type
@@ -417,6 +437,9 @@ export async function getDashboardData(
       row?.table_utilisation_heatmap ?? [],
       range.currentStart,
       range.currentEnd
+    ),
+    event_type_by_location: eventTypeByLocationFromRows(
+      row?.event_type_by_location ?? []
     ),
     party_size: partySizeFromRows(row?.party_size ?? []),
     booking_channel: breakdownFromRows(

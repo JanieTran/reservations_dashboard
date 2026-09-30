@@ -17,6 +17,8 @@ import type {
   CustomerTypeRow,
   DailyPoint,
   DailyRow,
+  EventTypeByLocationPoint,
+  EventTypeByLocationRow,
   HeatmapPoint,
   HeatmapRow,
   KpiData,
@@ -114,6 +116,18 @@ export function tableUtilisationHeatmapFromRows(
     }));
 
   return { dates, locations };
+}
+
+export function eventTypeByLocationFromRows(
+  rows: EventTypeByLocationRow[]
+): EventTypeByLocationPoint[] {
+  return rows.map((row) => ({
+    service_location_name: String(row.service_location_name ?? "Unknown"),
+    banquet_count: toNumber(row.banquet_count ?? 0),
+    dine_in_count: toNumber(row.dine_in_count ?? 0),
+    banquet_rate: toNumber(row.banquet_rate ?? 0),
+    dine_in_rate: toNumber(row.dine_in_rate ?? 0),
+  }));
 }
 
 function zeroedPeriod(period: "current" | "previous"): KpiPeriod {
