@@ -6,8 +6,9 @@ import type {
   CancelRatePoint,
   CancelRateRow,
   CancelReasonsCountRow,
+  CustomerTypeChannelPoint,
   CustomerTypeLocationPoint,
-  CustomerTypeLocationRow,
+  CustomerTypeRow,
   DailyPoint,
   DailyRow,
   HeatmapPoint,
@@ -137,7 +138,7 @@ export function cancelReasonsCountFromRows(
 }
 
 export function customerTypeByLocationFromRows(
-  rows: CustomerTypeLocationRow[]
+  rows: CustomerTypeRow[]
 ): CustomerTypeLocationPoint[] {
   return rows
     .map((row) => {
@@ -149,4 +150,16 @@ export function customerTypeByLocationFromRows(
         returning_rate: toNumber(row.returning_rate ?? 0),
       };
     })
+}
+
+export function customerTypeByChannelFromRows(
+  rows: CustomerTypeRow[]
+): CustomerTypeChannelPoint[] {
+  return rows.map((row) => ({
+    booking_channel: String(row.booking_channel ?? "Unknown"),
+    new_count: toNumber(row.new_count ?? 0),
+    returning_count: toNumber(row.returning_count ?? 0),
+    new_rate: toNumber(row.new_rate ?? 0),
+    returning_rate: toNumber(row.returning_rate ?? 0),
+  }));
 }

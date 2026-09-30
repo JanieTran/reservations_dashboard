@@ -20,6 +20,17 @@ export default function CustomersTab({ data }: CustomersTabProps) {
         yDomain={[0, 100]}
         layout="horizontal"
       />
+      <StackedBarCard
+        title="Customer Type by Booking Channel"
+        description="Share of new vs returning customers by channel"
+        data={data.customer_type_by_channel}
+        xKey="booking_channel"
+        stackKeys={["returning_rate", "new_rate"]}
+        stackLabels={{ returning_rate: "Returning", new_rate: "New" }}
+        valueMode="percent"
+        yDomain={[0, 100]}
+        layout="horizontal"
+      />
       <DonutChart
         title="Reservation Holder Gender"
         description="Bookings by gender"

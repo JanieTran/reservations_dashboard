@@ -54,15 +54,13 @@ export interface CancelReasonsCountRow {
   reservations: number | string | null;
 }
 
-export interface CustomerTypeLocationRow {
+export interface CustomerTypeRow {
   service_location_name?: string;
-  new?: number | string | null;
-  returning?: number | string | null;
+  booking_channel?: string;
   new_count?: number | string | null;
   returning_count?: number | string | null;
   new_rate?: number | string | null;
   returning_rate?: number | string | null;
-  new_customer_rate?: number | string | null;
 }
 
 // ---- normalized dashboard data ----
@@ -126,6 +124,15 @@ export interface CustomerTypeLocationPoint {
   returning_rate: number;
 }
 
+export interface CustomerTypeChannelPoint {
+  [key: string]: string | number | undefined;
+  booking_channel: string;
+  new_count: number;
+  returning_count: number;
+  new_rate: number;
+  returning_rate: number;
+}
+
 export interface DashboardQueryRow {
   [column: string]: unknown;
   kpi: KpiRow[] | null;
@@ -141,7 +148,8 @@ export interface DashboardQueryRow {
   cancel_by_event_type: CancelRateRow[] | null;
   cancel_by_banquet_type: CancelRateRow[] | null;
   cancel_reasons_count: CancelReasonsCountRow[] | null;
-  customer_type: CustomerTypeLocationRow[] | null;
+  customer_type: CustomerTypeRow[] | null;
+  customer_type_by_channel: CustomerTypeRow[] | null;
   service_location: BreakdownRow[] | null;
   booking_customer_gender: BreakdownRow[] | null;
 }
@@ -162,6 +170,7 @@ export interface DashboardData {
   cancel_reasons_count: BreakdownPoint[];
   booking_channel_rate: BookingChannelRatePoint[];
   customer_type: CustomerTypeLocationPoint[];
+  customer_type_by_channel: CustomerTypeChannelPoint[];
   service_location: BreakdownPoint[];
   booking_customer_gender: BreakdownPoint[];
 }
