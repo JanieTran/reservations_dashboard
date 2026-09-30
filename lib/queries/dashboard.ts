@@ -5,6 +5,7 @@ import { toDateKey, type DateRange } from "@/lib/ranges";
 
 import {
   breakdownFromRows,
+  bookingCustomerGenderFromRows,
   cancelRatesFromRows,
   cancelReasonsCountFromRows,
   customerNationalityFromRows,
@@ -338,10 +339,20 @@ const DASHBOARD_SQL = `
   )
   ,booking_customer_genders AS (
     SELECT
-      booking_customer_gender
-      ,COUNT(*) AS reservations
+      service_location_name
+      ,COUNT(*) FILTER (WHERE booking_customer_gender = 'Female') AS female_count
+      ,COUNT(*) FILTER (WHERE booking_customer_gender = 'Male') AS male_count
+      ,ROUND(
+          100.0 * COUNT(*) FILTER (WHERE booking_customer_gender = 'Female')
+          / NULLIF(COUNT(*), 0)
+        , 2) AS female_rate
+      ,ROUND(
+          100.0 * COUNT(*) FILTER (WHERE booking_customer_gender = 'Male')
+          / NULLIF(COUNT(*), 0)
+        , 2) AS male_rate
     FROM filtered_bookings
     WHERE booking_customer_gender IS NOT NULL
+      AND period = 'current'
     GROUP BY 1
   )
   SELECT
@@ -361,7 +372,7 @@ const DASHBOARD_SQL = `
     ,(SELECT json_agg(customer_types_by_location ORDER BY returning_rate DESC) FROM customer_types_by_location) AS customer_type
     ,(SELECT json_agg(customer_types_by_channel ORDER BY returning_rate DESC) FROM customer_types_by_channel) AS customer_type_by_channel
     ,(SELECT json_agg(service_locations ORDER BY reservations DESC, service_location_name) FROM service_locations) AS service_location
-    ,(SELECT json_agg(booking_customer_genders ORDER BY reservations DESC) FROM booking_customer_genders) AS booking_customer_gender
+    ,(SELECT json_agg(booking_customer_genders ORDER BY female_rate DESC) FROM booking_customer_genders) AS booking_customer_gender
     ,(SELECT json_agg(customer_nationality ORDER BY vietnamese_rate DESC) FROM customer_nationality) AS customer_nationality
 `;
 
@@ -436,9 +447,8 @@ export async function getDashboardData(
       row?.service_location ?? [],
       "service_location_name"
     ),
-    booking_customer_gender: breakdownFromRows(
-      row?.booking_customer_gender ?? [],
-      "booking_customer_gender"
+    booking_customer_gender: bookingCustomerGenderFromRows(
+      row?.booking_customer_gender ?? []
     ),
   };
 }

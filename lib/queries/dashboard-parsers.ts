@@ -1,6 +1,8 @@
 import type {
   BookingChannelRatePoint,
   BookingChannelRateRow,
+  BookingCustomerGenderPoint,
+  BookingCustomerGenderRow,
   BreakdownPoint,
   BreakdownRow,
   CancelRatePoint,
@@ -175,5 +177,17 @@ export function customerNationalityFromRows(
     foreigner_count: toNumber(row.foreigner_count ?? 0),
     vietnamese_rate: toNumber(row.vietnamese_rate ?? 0),
     foreigner_rate: toNumber(row.foreigner_rate ?? 0),
+  }));
+}
+
+export function bookingCustomerGenderFromRows(
+  rows: BookingCustomerGenderRow[]
+): BookingCustomerGenderPoint[] {
+  return rows.map((row) => ({
+    service_location_name: String(row.service_location_name ?? "Unknown"),
+    female_count: toNumber(row.female_count ?? 0),
+    male_count: toNumber(row.male_count ?? 0),
+    female_rate: toNumber(row.female_rate ?? 0),
+    male_rate: toNumber(row.male_rate ?? 0),
   }));
 }

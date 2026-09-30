@@ -1,4 +1,3 @@
-import DonutChart from "@/components/dashboard/donut-chart";
 import StackedBarCard from "@/components/dashboard/stacked-bar-chart-card";
 import type { DashboardData } from "@/lib/queries/dashboard";
 
@@ -45,10 +44,16 @@ export default function CustomersTab({ data }: CustomersTabProps) {
         yDomain={[0, 100]}
         layout="horizontal"
       />
-      <DonutChart
+      <StackedBarCard
         title="Reservation Holder Gender"
-        description="Bookings by gender"
+        description="Share of female and male reservations by location"
         data={data.booking_customer_gender}
+        xKey="service_location_name"
+        stackKeys={["female_rate", "male_rate"]}
+        stackLabels={{ female_rate: "Female", male_rate: "Male" }}
+        valueMode="percent"
+        yDomain={[0, 100]}
+        layout="horizontal"
       />
     </section>
   );

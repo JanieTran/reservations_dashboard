@@ -71,6 +71,14 @@ export interface CustomerNationalityRow {
   foreigner_rate?: number | string | null;
 }
 
+export interface BookingCustomerGenderRow {
+  service_location_name?: string;
+  female_count?: number | string | null;
+  male_count?: number | string | null;
+  female_rate?: number | string | null;
+  male_rate?: number | string | null;
+}
+
 // ---- normalized dashboard data ----
 
 export interface BreakdownPoint {
@@ -150,6 +158,15 @@ export interface CustomerNationalityPoint {
   foreigner_rate: number;
 }
 
+export interface BookingCustomerGenderPoint {
+  [key: string]: string | number | undefined;
+  service_location_name: string;
+  female_count: number;
+  male_count: number;
+  female_rate: number;
+  male_rate: number;
+}
+
 export interface DashboardQueryRow {
   [column: string]: unknown;
   kpi: KpiRow[] | null;
@@ -169,7 +186,7 @@ export interface DashboardQueryRow {
   customer_type_by_channel: CustomerTypeRow[] | null;
   customer_nationality: CustomerNationalityRow[] | null;
   service_location: BreakdownRow[] | null;
-  booking_customer_gender: BreakdownRow[] | null;
+  booking_customer_gender: BookingCustomerGenderRow[] | null;
 }
 
 export interface DashboardData {
@@ -191,7 +208,7 @@ export interface DashboardData {
   customer_type_by_channel: CustomerTypeChannelPoint[];
   customer_nationality: CustomerNationalityPoint[];
   service_location: BreakdownPoint[];
-  booking_customer_gender: BreakdownPoint[];
+  booking_customer_gender: BookingCustomerGenderPoint[];
 }
 
 export const SAMPLE_KPI_DATA: KpiData = {
