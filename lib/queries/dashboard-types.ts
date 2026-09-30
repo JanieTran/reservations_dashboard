@@ -63,6 +63,14 @@ export interface CustomerTypeRow {
   returning_rate?: number | string | null;
 }
 
+export interface CustomerNationalityRow {
+  service_location_name?: string;
+  vietnamese_count?: number | string | null;
+  foreigner_count?: number | string | null;
+  vietnamese_rate?: number | string | null;
+  foreigner_rate?: number | string | null;
+}
+
 // ---- normalized dashboard data ----
 
 export interface BreakdownPoint {
@@ -133,6 +141,15 @@ export interface CustomerTypeChannelPoint {
   returning_rate: number;
 }
 
+export interface CustomerNationalityPoint {
+  [key: string]: string | number | undefined;
+  service_location_name: string;
+  vietnamese_count: number;
+  foreigner_count: number;
+  vietnamese_rate: number;
+  foreigner_rate: number;
+}
+
 export interface DashboardQueryRow {
   [column: string]: unknown;
   kpi: KpiRow[] | null;
@@ -150,6 +167,7 @@ export interface DashboardQueryRow {
   cancel_reasons_count: CancelReasonsCountRow[] | null;
   customer_type: CustomerTypeRow[] | null;
   customer_type_by_channel: CustomerTypeRow[] | null;
+  customer_nationality: CustomerNationalityRow[] | null;
   service_location: BreakdownRow[] | null;
   booking_customer_gender: BreakdownRow[] | null;
 }
@@ -171,6 +189,7 @@ export interface DashboardData {
   booking_channel_rate: BookingChannelRatePoint[];
   customer_type: CustomerTypeLocationPoint[];
   customer_type_by_channel: CustomerTypeChannelPoint[];
+  customer_nationality: CustomerNationalityPoint[];
   service_location: BreakdownPoint[];
   booking_customer_gender: BreakdownPoint[];
 }

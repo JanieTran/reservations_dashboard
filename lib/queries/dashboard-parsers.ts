@@ -6,6 +6,8 @@ import type {
   CancelRatePoint,
   CancelRateRow,
   CancelReasonsCountRow,
+  CustomerNationalityPoint,
+  CustomerNationalityRow,
   CustomerTypeChannelPoint,
   CustomerTypeLocationPoint,
   CustomerTypeRow,
@@ -161,5 +163,17 @@ export function customerTypeByChannelFromRows(
     returning_count: toNumber(row.returning_count ?? 0),
     new_rate: toNumber(row.new_rate ?? 0),
     returning_rate: toNumber(row.returning_rate ?? 0),
+  }));
+}
+
+export function customerNationalityFromRows(
+  rows: CustomerNationalityRow[]
+): CustomerNationalityPoint[] {
+  return rows.map((row) => ({
+    service_location_name: String(row.service_location_name ?? "Unknown"),
+    vietnamese_count: toNumber(row.vietnamese_count ?? 0),
+    foreigner_count: toNumber(row.foreigner_count ?? 0),
+    vietnamese_rate: toNumber(row.vietnamese_rate ?? 0),
+    foreigner_rate: toNumber(row.foreigner_rate ?? 0),
   }));
 }

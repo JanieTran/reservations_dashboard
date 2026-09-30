@@ -7,6 +7,7 @@ import {
   breakdownFromRows,
   cancelRatesFromRows,
   cancelReasonsCountFromRows,
+  customerNationalityFromRows,
   customerTypeByChannelFromRows,
   customerTypeByLocationFromRows,
   dailyFromRows,
@@ -317,6 +318,24 @@ const DASHBOARD_SQL = `
       AND period = 'current'
     GROUP BY 1
   )
+  ,customer_nationality AS (
+    SELECT
+      service_location_name
+      ,COUNT(*) FILTER (WHERE guest_nationality = 'Vietnamese') AS vietnamese_count
+      ,COUNT(*) FILTER (WHERE guest_nationality = 'Foreigner') AS foreigner_count
+      ,ROUND(
+          100.0 * COUNT(*) FILTER (WHERE guest_nationality = 'Vietnamese')
+          / NULLIF(COUNT(*), 0)
+        , 2) AS vietnamese_rate
+      ,ROUND(
+          100.0 * COUNT(*) FILTER (WHERE guest_nationality = 'Foreigner')
+          / NULLIF(COUNT(*), 0)
+        , 2) AS foreigner_rate
+    FROM filtered_bookings
+    WHERE guest_nationality IS NOT NULL
+      AND period = 'current'
+    GROUP BY 1
+  )
   ,booking_customer_genders AS (
     SELECT
       booking_customer_gender
@@ -343,6 +362,7 @@ const DASHBOARD_SQL = `
     ,(SELECT json_agg(customer_types_by_channel ORDER BY returning_rate DESC) FROM customer_types_by_channel) AS customer_type_by_channel
     ,(SELECT json_agg(service_locations ORDER BY reservations DESC, service_location_name) FROM service_locations) AS service_location
     ,(SELECT json_agg(booking_customer_genders ORDER BY reservations DESC) FROM booking_customer_genders) AS booking_customer_gender
+    ,(SELECT json_agg(customer_nationality ORDER BY vietnamese_rate DESC) FROM customer_nationality) AS customer_nationality
 `;
 
 // ---- public api ----
@@ -408,6 +428,9 @@ export async function getDashboardData(
     customer_type: customerTypeByLocationFromRows(row?.customer_type ?? []),
     customer_type_by_channel: customerTypeByChannelFromRows(
       row?.customer_type_by_channel ?? []
+    ),
+    customer_nationality: customerNationalityFromRows(
+      row?.customer_nationality ?? []
     ),
     service_location: breakdownFromRows(
       row?.service_location ?? [],

@@ -31,6 +31,20 @@ export default function CustomersTab({ data }: CustomersTabProps) {
         yDomain={[0, 100]}
         layout="horizontal"
       />
+      <StackedBarCard
+        title="Guest Nationality by Location"
+        description="Share of Vietnamese and foreign guests by location"
+        data={data.customer_nationality}
+        xKey="service_location_name"
+        stackKeys={["vietnamese_rate", "foreigner_rate"]}
+        stackLabels={{
+          vietnamese_rate: "Vietnamese",
+          foreigner_rate: "Foreigner",
+        }}
+        valueMode="percent"
+        yDomain={[0, 100]}
+        layout="horizontal"
+      />
       <DonutChart
         title="Reservation Holder Gender"
         description="Bookings by gender"
