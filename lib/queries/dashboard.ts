@@ -139,6 +139,7 @@ const DASHBOARD_SQL = `
     WHERE
       BK.is_test = FALSE
       AND DATE(BK.reserved_at + INTERVAL '7 hours') BETWEEN $3 AND $2
+      AND BK.merchant_id = '23352246-f1a6-41b1-b115-ff89f08989e6'
   )
   ,daily AS (
     SELECT

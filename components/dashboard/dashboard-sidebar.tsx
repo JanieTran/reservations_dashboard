@@ -13,6 +13,7 @@ import {
   SidebarMenu,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import type { DateRangePreset } from "@/lib/ranges";
 
 export type DashboardTab =
   | "overview"
@@ -22,6 +23,7 @@ export type DashboardTab =
 
 interface DashboardSidebarProps {
   activeTab: DashboardTab;
+  period: DateRangePreset;
 }
 
 const navigation: {
@@ -45,6 +47,7 @@ const navigation: {
 
 export default function DashboardSidebar({
   activeTab,
+  period,
 }: DashboardSidebarProps) {
   return (
     <Sidebar>
@@ -54,7 +57,7 @@ export default function DashboardSidebar({
             Norra
           </p>
           <p className="mt-1 text-xs text-sidebar-foreground/60">
-            Reservations dashboard
+            Restaurant dashboard
           </p>
         </div>
       </SidebarHeader>
@@ -68,7 +71,7 @@ export default function DashboardSidebar({
               return (
                 <Link
                   key={id}
-                  href={`/?tab=${id}`}
+                  href={`/?tab=${id}&period=${period}`}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
                     "flex min-h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none",

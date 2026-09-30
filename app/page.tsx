@@ -14,11 +14,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getDashboardData, type DashboardData } from "@/lib/queries/dashboard";
-import { getDefaultDateRange } from "@/lib/ranges";
+import {
+  getDateRange,
+  isDateRangePreset,
+  type DateRangePreset,
+} from "@/lib/ranges";
 import { getSession } from "@/lib/session";
 
 interface DashboardPageProps {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; period?: string }>;
 }
 
 function isDashboardTab(value: string | undefined): value is DashboardTab {
@@ -38,20 +42,25 @@ export default async function DashboardPage({
     redirect("/login");
   }
 
-  const requestedTab = (await searchParams).tab;
+  const params = await searchParams;
+  const requestedTab = params.tab;
   const activeTab: DashboardTab = isDashboardTab(requestedTab)
     ? requestedTab
     : "overview";
+  const period: DateRangePreset = isDateRangePreset(params.period)
+    ? params.period
+    : "month";
+  const dateRange = getDateRange(period);
 
   let dashboard: DashboardData | null;
   try {
-    dashboard = await getDashboardData(getDefaultDateRange());
+    dashboard = await getDashboardData(dateRange);
   } catch {
     dashboard = null;
   }
 
   return (
-    <DashboardShell activeTab={activeTab}>
+    <DashboardShell activeTab={activeTab} period={period} dateRange={dateRange}>
       {dashboard ? (
         activeTab === "overview" ? (
           <OverviewTab data={dashboard} />
