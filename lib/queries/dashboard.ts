@@ -1,8 +1,9 @@
+import type { QueryResultRow } from "pg";
+
 import { query } from "@/lib/db";
 import { toDateKey, type DateRange } from "@/lib/ranges";
 
 import {
-  bookingChannelRatesFromRows,
   breakdownFromRows,
   cancelRatesFromRows,
   cancelReasonsCountFromRows,
@@ -12,7 +13,7 @@ import {
   kpisFromRows,
   partySizeFromRows,
 } from "./dashboard-parsers";
-import type { DashboardData, DashboardPayload } from "./dashboard-types";
+import type { DashboardData, DashboardQueryRow } from "./dashboard-types";
 
 export type { DashboardData } from "./dashboard-types";
 
@@ -306,40 +307,22 @@ const DASHBOARD_SQL = `
     GROUP BY 1
   )
   SELECT
-    json_build_object(
-      'kpi'
-      ,(SELECT json_agg(kpi) FROM kpi)
-      ,'daily'
-      ,(SELECT json_agg(daily ORDER BY date) FROM daily)
-      ,'heatmap'
-      ,(SELECT json_agg(heatmap ORDER BY weekday, hour) FROM heatmap)
-      ,'party_size'
-      ,(SELECT json_agg(party_size ORDER BY average_party_size) FROM party_size)
-      ,'booking_channel'
-      ,(SELECT json_agg(booking_channels ORDER BY reservations DESC) FROM booking_channels)
-      ,'banquet_type'
-      ,(SELECT json_agg(banquet_type_dist ORDER BY reservations DESC) FROM banquet_type_dist)
-      ,'resv_day_of_week'
-      ,(SELECT json_agg(resv_day_of_week ORDER BY weekday) FROM resv_day_of_week)
-      ,'resv_lead_time'
-      ,(SELECT json_agg(resv_lead_time ORDER BY lead_time_idx) FROM resv_lead_time)
-      ,'cancel_by_location'
-      ,(SELECT json_agg(cancel_by_location ORDER BY cancel_rate DESC) FROM cancel_by_location)
-      ,'cancel_by_channel'
-      ,(SELECT json_agg(cancel_by_channel ORDER BY cancel_rate DESC) FROM cancel_by_channel)
-      ,'cancel_by_event_type'
-      ,(SELECT json_agg(cancel_by_event_type ORDER BY cancel_rate DESC) FROM cancel_by_event_type)
-      ,'cancel_by_banquet_type'
-      ,(SELECT json_agg(cancel_by_banquet_type ORDER BY cancel_rate DESC) FROM cancel_by_banquet_type)
-      ,'cancel_reasons_count'
-      ,(SELECT json_agg(cancel_reasons_count ORDER BY reservations DESC) FROM cancel_reasons_count)
-      ,'customer_type'
-      ,(SELECT json_agg(customer_types ORDER BY new_rate DESC) FROM customer_types)
-      ,'service_location'
-      ,(SELECT json_agg(service_locations ORDER BY reservations DESC, service_location_name) FROM service_locations)
-      ,'booking_customer_gender'
-      ,(SELECT json_agg(booking_customer_genders ORDER BY reservations DESC) FROM booking_customer_genders)
-    ) AS data
+    (SELECT json_agg(kpi) FROM kpi) AS kpi
+    ,(SELECT json_agg(daily ORDER BY date) FROM daily) AS daily
+    ,(SELECT json_agg(heatmap ORDER BY weekday, hour) FROM heatmap) AS heatmap
+    ,(SELECT json_agg(party_size ORDER BY average_party_size) FROM party_size) AS party_size
+    ,(SELECT json_agg(booking_channels ORDER BY reservations DESC) FROM booking_channels) AS booking_channel
+    ,(SELECT json_agg(banquet_type_dist ORDER BY reservations DESC) FROM banquet_type_dist) AS banquet_type
+    ,(SELECT json_agg(resv_day_of_week ORDER BY weekday) FROM resv_day_of_week) AS resv_day_of_week
+    ,(SELECT json_agg(resv_lead_time ORDER BY lead_time_idx) FROM resv_lead_time) AS resv_lead_time
+    ,(SELECT json_agg(cancel_by_location ORDER BY cancel_rate DESC) FROM cancel_by_location) AS cancel_by_location
+    ,(SELECT json_agg(cancel_by_channel ORDER BY cancel_rate DESC) FROM cancel_by_channel) AS cancel_by_channel
+    ,(SELECT json_agg(cancel_by_event_type ORDER BY cancel_rate DESC) FROM cancel_by_event_type) AS cancel_by_event_type
+    ,(SELECT json_agg(cancel_by_banquet_type ORDER BY cancel_rate DESC) FROM cancel_by_banquet_type) AS cancel_by_banquet_type
+    ,(SELECT json_agg(cancel_reasons_count ORDER BY reservations DESC) FROM cancel_reasons_count) AS cancel_reasons_count
+    ,(SELECT json_agg(customer_types ORDER BY returning_rate DESC) FROM customer_types) AS customer_type
+    ,(SELECT json_agg(service_locations ORDER BY reservations DESC, service_location_name) FROM service_locations) AS service_location
+    ,(SELECT json_agg(booking_customer_genders ORDER BY reservations DESC) FROM booking_customer_genders) AS booking_customer_gender
 `;
 
 // ---- public api ----
@@ -356,7 +339,7 @@ export async function getDashboardData(
   // The range ends are the inclusive last days of each period, matching the
   // SQL's inclusive BETWEEN.
   const row = (
-    await query<{ data: DashboardPayload | string | null }>(DASHBOARD_SQL, [
+    await query<DashboardQueryRow & QueryResultRow>(DASHBOARD_SQL, [
       toDateKey(range.currentStart),
       toDateKey(range.currentEnd),
       toDateKey(range.previousStart),
@@ -364,70 +347,52 @@ export async function getDashboardData(
     ])
   ).rows[0];
 
-  const payload = parsePayload(row?.data);
-
   return {
-    kpi: kpisFromRows(payload?.kpi ?? []),
-    daily: dailyFromRows(payload?.daily ?? []),
-    heatmap: heatmapFromRows(payload?.heatmap ?? []),
-    party_size: partySizeFromRows(payload?.party_size ?? []),
+    kpi: kpisFromRows(row?.kpi ?? []),
+    daily: dailyFromRows(row?.daily ?? []),
+    heatmap: heatmapFromRows(row?.heatmap ?? []),
+    party_size: partySizeFromRows(row?.party_size ?? []),
     booking_channel: breakdownFromRows(
-      payload?.booking_channel ?? [],
+      row?.booking_channel ?? [],
       "booking_channel"
     ),
-    banquet_type: breakdownFromRows(payload?.banquet_type ?? [], "banquet_type"),
+    banquet_type: breakdownFromRows(row?.banquet_type ?? [], "banquet_type"),
     resv_day_of_week: breakdownFromRows(
-      payload?.resv_day_of_week ?? [],
+      row?.resv_day_of_week ?? [],
       "weekday_label"
     ),
     resv_lead_time: breakdownFromRows(
-      payload?.resv_lead_time ?? [],
+      row?.resv_lead_time ?? [],
       "lead_time_label"
     ),
     cancel_by_location: cancelRatesFromRows(
-      payload?.cancel_by_location ?? [],
+      row?.cancel_by_location ?? [],
       "service_location_name"
     ),
     cancel_by_channel: cancelRatesFromRows(
-      payload?.cancel_by_channel ?? [],
+      row?.cancel_by_channel ?? [],
       "booking_channel"
     ),
     cancel_by_event_type: cancelRatesFromRows(
-      payload?.cancel_by_event_type ?? [],
+      row?.cancel_by_event_type ?? [],
       "event_type"
     ),
     cancel_by_banquet_type: cancelRatesFromRows(
-      payload?.cancel_by_banquet_type ?? [],
+      row?.cancel_by_banquet_type ?? [],
       "banquet_type"
     ),
     cancel_reasons_count: cancelReasonsCountFromRows(
-      payload?.cancel_reasons_count ?? []
+      row?.cancel_reasons_count ?? []
     ),
-    booking_channel_rate: bookingChannelRatesFromRows(
-      payload?.booking_channel_rate ?? []
-    ),
-    customer_type: customerTypeByLocationFromRows(payload?.customer_type ?? []),
+    booking_channel_rate: [],
+    customer_type: customerTypeByLocationFromRows(row?.customer_type ?? []),
     service_location: breakdownFromRows(
-      payload?.service_location ?? [],
+      row?.service_location ?? [],
       "service_location_name"
     ),
     booking_customer_gender: breakdownFromRows(
-      payload?.booking_customer_gender ?? [],
+      row?.booking_customer_gender ?? [],
       "booking_customer_gender"
     ),
   };
-}
-
-/**
- * Normalizes the data column, parsing it when pg returns it as a JSON string.
- */
-function parsePayload(data: unknown): DashboardPayload | null {
-  if (typeof data === "string") {
-    try {
-      return JSON.parse(data) as DashboardPayload;
-    } catch {
-      return null;
-    }
-  }
-  return (data as DashboardPayload | null) ?? null;
 }

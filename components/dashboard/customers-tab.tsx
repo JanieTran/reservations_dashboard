@@ -14,8 +14,8 @@ export default function CustomersTab({ data }: CustomersTabProps) {
         description="Share of new vs returning customers by location"
         data={data.customer_type}
         xKey="service_location_name"
-        stackKeys={["new_rate", "returning_rate"]}
-        stackLabels={{ new_rate: "New", returning_rate: "Returning" }}
+        stackKeys={[ "returning_rate", "new_rate" ]}
+        stackLabels={{ returning_rate: "Returning", new_rate: "New" }}
         valueMode="percent"
         yDomain={[0, 100]}
         layout="horizontal"

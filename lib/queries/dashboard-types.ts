@@ -126,24 +126,24 @@ export interface CustomerTypeLocationPoint {
   returning_rate: number;
 }
 
-export interface DashboardPayload {
-  kpi: KpiRow[];
-  daily: DailyRow[];
-  heatmap: HeatmapRow[];
-  party_size: PartySizeRow[];
-  booking_channel: BreakdownRow[];
-  banquet_type: BreakdownRow[];
-  resv_day_of_week: BreakdownRow[];
-  resv_lead_time: BreakdownRow[];
-  cancel_by_location: CancelRateRow[];
-  cancel_by_channel: CancelRateRow[];
-  cancel_by_event_type: CancelRateRow[];
-  cancel_by_banquet_type: CancelRateRow[];
-  cancel_reasons_count: CancelReasonsCountRow[];
-  booking_channel_rate: BookingChannelRateRow[];
-  customer_type: CustomerTypeLocationRow[];
-  service_location: BreakdownRow[];
-  booking_customer_gender: BreakdownRow[];
+export interface DashboardQueryRow {
+  [column: string]: unknown;
+  kpi: KpiRow[] | null;
+  daily: DailyRow[] | null;
+  heatmap: HeatmapRow[] | null;
+  party_size: PartySizeRow[] | null;
+  booking_channel: BreakdownRow[] | null;
+  banquet_type: BreakdownRow[] | null;
+  resv_day_of_week: BreakdownRow[] | null;
+  resv_lead_time: BreakdownRow[] | null;
+  cancel_by_location: CancelRateRow[] | null;
+  cancel_by_channel: CancelRateRow[] | null;
+  cancel_by_event_type: CancelRateRow[] | null;
+  cancel_by_banquet_type: CancelRateRow[] | null;
+  cancel_reasons_count: CancelReasonsCountRow[] | null;
+  customer_type: CustomerTypeLocationRow[] | null;
+  service_location: BreakdownRow[] | null;
+  booking_customer_gender: BreakdownRow[] | null;
 }
 
 export interface DashboardData {
