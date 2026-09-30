@@ -1,3 +1,5 @@
+import { toDateKey } from "@/lib/ranges";
+
 import type {
   BookingChannelRatePoint,
   BookingChannelRateRow,
@@ -22,6 +24,8 @@ import type {
   KpiRow,
   PartySizePoint,
   PartySizeRow,
+  TableUtilisationHeatmapData,
+  TableUtilisationRow,
 } from "./dashboard-types";
 
 function toNumber(value: number | string | null | undefined): number {
@@ -70,6 +74,46 @@ export function heatmapFromRows(rows: HeatmapRow[]): HeatmapPoint[] {
     hour: toNumber(row.hour),
     reservations: toNumber(row.reservations),
   }));
+}
+
+export function tableUtilisationHeatmapFromRows(
+  rows: TableUtilisationRow[],
+  startDate: Date,
+  endDate: Date
+): TableUtilisationHeatmapData {
+  const dates: string[] = [];
+  const dateCursor = new Date(startDate);
+  dateCursor.setHours(0, 0, 0, 0);
+  const lastDate = new Date(endDate);
+  lastDate.setHours(0, 0, 0, 0);
+
+  while (dateCursor <= lastDate) {
+    dates.push(toDateKey(dateCursor));
+    dateCursor.setDate(dateCursor.getDate() + 1);
+  }
+
+  const ratesByLocation = new Map<string, Map<string, number>>();
+  for (const row of rows) {
+    const locationName = String(row.service_location_name ?? "Unknown");
+    let ratesByDate = ratesByLocation.get(locationName);
+    if (!ratesByDate) {
+      ratesByDate = new Map();
+      ratesByLocation.set(locationName, ratesByDate);
+    }
+    ratesByDate.set(
+      String(row.booking_date).slice(0, 10),
+      toNumber(row.table_utilisation_rate)
+    );
+  }
+
+  const locations = [...ratesByLocation.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([service_location_name, ratesByDate]) => ({
+      service_location_name,
+      utilisation_rates: dates.map((date) => ratesByDate.get(date) ?? 0),
+    }));
+
+  return { dates, locations };
 }
 
 function zeroedPeriod(period: "current" | "previous"): KpiPeriod {

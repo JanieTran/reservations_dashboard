@@ -15,6 +15,7 @@ import {
   heatmapFromRows,
   kpisFromRows,
   partySizeFromRows,
+  tableUtilisationHeatmapFromRows,
 } from "./dashboard-parsers";
 import type { DashboardData, DashboardQueryRow } from "./dashboard-types";
 
@@ -54,8 +55,8 @@ const DASHBOARD_SQL = `
       ,COALESCE(INITCAP(REPLACE(BK.dine_in_type, '_', ' ')), 'Booking') AS dine_in_type
       ,INITCAP(REPLACE(BK.event_type, '_', ' ')) AS event_type
       ,INITCAP(REPLACE(BK.banquet_type, '_', ' ')) AS banquet_type
-      ,EXTRACT(ISODOW FROM BK.reserved_at) AS weekday
-      ,CONCAT(EXTRACT(ISODOW FROM BK.reserved_at), ' - ', LEFT(TO_CHAR(BK.reserved_at, 'Day'), 3)) AS weekday_char
+      ,EXTRACT(ISODOW FROM BK.reserved_at + INTERVAL '7 hours') AS weekday
+      ,CONCAT(EXTRACT(ISODOW FROM BK.reserved_at + INTERVAL '7 hours'), ' - ', LEFT(TO_CHAR(BK.reserved_at + INTERVAL '7 hours', 'Day'), 3)) AS weekday_char
       ,EXTRACT(HOUR FROM BK.reserved_at + INTERVAL '7 hours')   AS hour
       ,INITCAP(BK.booking_channel) AS booking_channel
       ,MC.name AS merchant_name
@@ -156,6 +157,15 @@ const DASHBOARD_SQL = `
     FROM filtered_bookings
     WHERE period = 'current'
     GROUP BY 1, 2, 3
+  )
+  ,table_utilisation_heatmap AS (
+    SELECT
+      service_location_name
+      ,DATE(reserved_at) AS booking_date
+      ,SUM(occupied_table_hours) / NULLIF(MAX(daily_table_hours), 0) * 100 AS table_utilisation_rate
+    FROM filtered_bookings
+    WHERE period = 'current'
+    GROUP BY 1, 2
   )
   ,kpi AS (
     SELECT
@@ -359,6 +369,7 @@ const DASHBOARD_SQL = `
     (SELECT json_agg(kpi) FROM kpi) AS kpi
     ,(SELECT json_agg(daily ORDER BY date) FROM daily) AS daily
     ,(SELECT json_agg(heatmap ORDER BY weekday, hour) FROM heatmap) AS heatmap
+    ,(SELECT json_agg(table_utilisation_heatmap ORDER BY booking_date) FROM table_utilisation_heatmap) AS table_utilisation_heatmap
     ,(SELECT json_agg(party_size ORDER BY average_party_size) FROM party_size) AS party_size
     ,(SELECT json_agg(booking_channels ORDER BY reservations DESC) FROM booking_channels) AS booking_channel
     ,(SELECT json_agg(banquet_type_dist ORDER BY reservations DESC) FROM banquet_type_dist) AS banquet_type
@@ -402,6 +413,11 @@ export async function getDashboardData(
     kpi: kpisFromRows(row?.kpi ?? []),
     daily: dailyFromRows(row?.daily ?? []),
     heatmap: heatmapFromRows(row?.heatmap ?? []),
+    table_utilisation_heatmap: tableUtilisationHeatmapFromRows(
+      row?.table_utilisation_heatmap ?? [],
+      range.currentStart,
+      range.currentEnd
+    ),
     party_size: partySizeFromRows(row?.party_size ?? []),
     booking_channel: breakdownFromRows(
       row?.booking_channel ?? [],

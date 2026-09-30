@@ -18,6 +18,12 @@ export interface HeatmapRow {
   reservations: string;
 }
 
+export interface TableUtilisationRow {
+  service_location_name?: string;
+  booking_date: string;
+  table_utilisation_rate: number | string | null;
+}
+
 export interface KpiRow {
   period: "current" | "previous";
   total_bookings: string;
@@ -101,6 +107,16 @@ export interface HeatmapPoint {
   reservations: number;
 }
 
+export interface TableUtilisationLocation {
+  service_location_name: string;
+  utilisation_rates: number[];
+}
+
+export interface TableUtilisationHeatmapData {
+  dates: string[];
+  locations: TableUtilisationLocation[];
+}
+
 export interface KpiPeriod {
   period: "current" | "previous";
   total_bookings: number;
@@ -172,6 +188,7 @@ export interface DashboardQueryRow {
   kpi: KpiRow[] | null;
   daily: DailyRow[] | null;
   heatmap: HeatmapRow[] | null;
+  table_utilisation_heatmap: TableUtilisationRow[] | null;
   party_size: PartySizeRow[] | null;
   booking_channel: BreakdownRow[] | null;
   banquet_type: BreakdownRow[] | null;
@@ -193,6 +210,7 @@ export interface DashboardData {
   kpi: KpiData;
   daily: DailyPoint[];
   heatmap: HeatmapPoint[];
+  table_utilisation_heatmap: TableUtilisationHeatmapData;
   party_size: PartySizePoint[];
   booking_channel: BreakdownPoint[];
   banquet_type: BreakdownPoint[];
