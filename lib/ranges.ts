@@ -9,7 +9,9 @@ export interface DateRange {
   previousEnd: Date;
 }
 
-export type DateRangePreset = "week" | "month" | "quarter" | "year";
+type DateRangeUnit = "week" | "month" | "quarter" | "year";
+
+export type DateRangePreset = DateRangeUnit | `last-${DateRangeUnit}`;
 
 const DATE_TIME_ZONE = "Asia/Ho_Chi_Minh";
 
@@ -28,7 +30,11 @@ export function isDateRangePreset(value: unknown): value is DateRangePreset {
     value === "week" ||
     value === "month" ||
     value === "quarter" ||
-    value === "year"
+    value === "year" ||
+    value === "last-week" ||
+    value === "last-month" ||
+    value === "last-quarter" ||
+    value === "last-year"
   );
 }
 
@@ -46,6 +52,9 @@ function vietnamCalendarDate(date: Date): Date {
   return new Date(Number(values.year), Number(values.month) - 1, Number(values.day));
 }
 
+/**
+ * Shifts a date by a specified number of days, preserving the time of day.
+ */
 function shiftDays(date: Date, days: number): Date {
   const shifted = new Date(date);
   // Calendar arithmetic avoids fixed-millisecond shifts crossing DST boundaries.
@@ -53,6 +62,10 @@ function shiftDays(date: Date, days: number): Date {
   return shifted;
 }
 
+/**
+ * Shifts a date by a specified number of months,
+ * clamping the day to the new month's last day if necessary.
+ */
 function shiftMonthsClamped(date: Date, months: number): Date {
   // Start from day one because changing months directly can roll Mar 31 into March.
   const shifted = new Date(date.getFullYear(), date.getMonth() + months, 1);
@@ -74,36 +87,67 @@ export function getDateRange(
   preset: DateRangePreset,
   now: Date = new Date()
 ): DateRange {
-  const currentEnd = vietnamCalendarDate(now);
+  const today = vietnamCalendarDate(now);
+  const isLastPeriod = preset.startsWith("last-");
+  const unit = (isLastPeriod ? preset.slice(5) : preset) as DateRangeUnit;
   let currentStart: Date;
+  let currentEnd: Date;
   let previousStart: Date;
   let previousEnd: Date;
 
-  if (preset === "week") {
+  if (unit === "week") {
     // JavaScript numbers Sunday as 0; convert it to days since Monday (0..6).
-    const daysSinceMonday = (currentEnd.getDay() + 6) % 7;
-    currentStart = shiftDays(currentEnd, -daysSinceMonday);
-    previousStart = shiftDays(currentStart, -7);
-    previousEnd = shiftDays(currentEnd, -7);
-  } else {
-    // Quarter/year presets use the same month arithmetic as month, in groups
-    // of three or twelve months respectively.
-    const monthsPerPeriod = preset === "month" ? 1 : preset === "quarter" ? 3 : 12;
-    const firstMonth =
-      preset === "quarter"
-        ? Math.floor(currentEnd.getMonth() / 3) * 3
-        : preset === "year"
-          ? 0
-          : currentEnd.getMonth();
+    const daysSinceMonday = (today.getDay() + 6) % 7;
+    const startOfCurrentWeek = shiftDays(today, -daysSinceMonday);
 
-    currentStart = new Date(currentEnd.getFullYear(), firstMonth, 1);
-    // Compare against the same calendar boundary and point in the prior period.
-    previousStart = new Date(
-      currentStart.getFullYear(),
-      currentStart.getMonth() - monthsPerPeriod,
-      1
-    );
-    previousEnd = shiftMonthsClamped(currentEnd, -monthsPerPeriod);
+    if (isLastPeriod) {
+      currentStart = shiftDays(startOfCurrentWeek, -7);
+      currentEnd = shiftDays(startOfCurrentWeek, -1);
+      previousStart = shiftDays(currentStart, -7);
+      previousEnd = shiftDays(currentEnd, -7);
+    } else {
+      currentStart = startOfCurrentWeek;
+      currentEnd = today;
+      previousStart = shiftDays(currentStart, -7);
+      previousEnd = shiftDays(currentEnd, -7);
+    }
+  } else {
+    const monthsPerPeriod = unit === "month" ? 1 : unit === "quarter" ? 3 : 12;
+    // Start from the first month of the current period (Jan, Apr, Jul, Oct for quarters).
+    const firstMonth =
+      unit === "quarter"
+        ? Math.floor(today.getMonth() / 3) * 3
+        : unit === "year"
+          ? 0
+          : today.getMonth();
+    const startOfCurrentPeriod = new Date(today.getFullYear(), firstMonth, 1);
+
+    // Full latest period preceding today
+    if (isLastPeriod) {
+      currentStart = new Date(
+        startOfCurrentPeriod.getFullYear(),
+        startOfCurrentPeriod.getMonth() - monthsPerPeriod,
+        1
+      );
+      currentEnd = shiftDays(startOfCurrentPeriod, -1);
+      previousStart = new Date(
+        currentStart.getFullYear(),
+        currentStart.getMonth() - monthsPerPeriod,
+        1
+      );
+      previousEnd = shiftDays(currentStart, -1);
+    } 
+    // Partial current period up to today
+    else {
+      currentStart = startOfCurrentPeriod;
+      currentEnd = today;
+      previousStart = new Date(
+        currentStart.getFullYear(),
+        currentStart.getMonth() - monthsPerPeriod,
+        1
+      );
+      previousEnd = shiftMonthsClamped(today, -monthsPerPeriod);
+    }
   }
 
   return { currentStart, currentEnd, previousStart, previousEnd };

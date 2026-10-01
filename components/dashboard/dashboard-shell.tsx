@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -26,12 +28,30 @@ const tabLabels: Record<DashboardTab, string> = {
   customers: "Customers",
 };
 
-const periodOptions: { value: DateRangePreset; label: string }[] = [
-  { value: "week", label: "Current week" },
-  { value: "month", label: "Current month" },
-  { value: "quarter", label: "Current quarter" },
-  { value: "year", label: "Current year" },
+const periodGroups: {
+  label: string;
+  options: { value: DateRangePreset; label: string }[];
+}[] = [
+  {
+    label: "Current",
+    options: [
+      { value: "week", label: "Current week" },
+      { value: "month", label: "Current month" },
+      { value: "quarter", label: "Current quarter" },
+      { value: "year", label: "Current year" },
+    ],
+  },
+  {
+    label: "Last",
+    options: [
+      { value: "last-week", label: "Last week" },
+      { value: "last-month", label: "Last month" },
+      { value: "last-quarter", label: "Last quarter" },
+      { value: "last-year", label: "Last year" },
+    ],
+  },
 ];
+const periodOptions = periodGroups.flatMap(({ options }) => options);
 
 function asUtcCalendarDate(date: Date): Date {
   const [year, month, day] = toDateKey(date).split("-").map(Number);
@@ -76,7 +96,11 @@ export default function DashboardShell({
               <span className="text-sm font-medium text-muted-foreground">
                 Date range
               </span>
-              <Select name="period" defaultValue={period} items={periodOptions}>
+              <Select
+                name="period"
+                defaultValue={period}
+                items={periodOptions}
+              >
                 <SelectTrigger
                   id="dashboard-period"
                   aria-label="Date range"
@@ -84,11 +108,20 @@ export default function DashboardShell({
                 >
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  {periodOptions.map(({ value, label }) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
+                <SelectContent alignItemWithTrigger={false}>
+                  {periodGroups.map(({ label, options }) => (
+                    <SelectGroup key={label}>
+                      <SelectLabel>{label}</SelectLabel>
+                      {options.map(({ value, label: optionLabel }) => (
+                        <SelectItem
+                          key={value}
+                          value={value}
+                          className="focus:bg-muted focus:text-foreground focus:**:text-foreground"
+                        >
+                          {optionLabel}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   ))}
                 </SelectContent>
               </Select>
