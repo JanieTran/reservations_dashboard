@@ -16,6 +16,7 @@ import {
   heatmapFromRows,
   kpisFromRows,
   partySizeFromRows,
+  resvCountByLocationFromRows,
   tableUtilisationHeatmapFromRows,
 } from "./dashboard-parsers";
 import type { DashboardData, DashboardQueryRow } from "./dashboard-types";
@@ -211,6 +212,15 @@ const DASHBOARD_SQL = `
       AND period = 'current'
     GROUP BY 1
   )
+  ,resv_count_by_locations AS (
+    SELECT
+      service_location_name
+      ,COUNT(*) AS reservations
+    FROM filtered_bookings
+    WHERE period = 'current'
+      AND dine_in_type = 'Booking'
+    GROUP BY 1
+  )
   ,party_size AS (
     SELECT
       COALESCE(banquet_type, 'Dine In') AS banquet_type
@@ -391,6 +401,7 @@ const DASHBOARD_SQL = `
     ,(SELECT json_agg(heatmap ORDER BY weekday, hour) FROM heatmap) AS heatmap
     ,(SELECT json_agg(table_utilisation_heatmap ORDER BY booking_date) FROM table_utilisation_heatmap) AS table_utilisation_heatmap
     ,(SELECT json_agg(event_type_by_location ORDER BY banquet_rate DESC) FROM event_type_by_location) AS event_type_by_location
+    ,(SELECT json_agg(resv_count_by_locations ORDER BY reservations DESC) FROM resv_count_by_locations) AS resv_count_by_locations
     ,(SELECT json_agg(party_size ORDER BY average_party_size) FROM party_size) AS party_size
     ,(SELECT json_agg(booking_channels ORDER BY reservations DESC) FROM booking_channels) AS booking_channel
     ,(SELECT json_agg(banquet_type_dist ORDER BY reservations DESC) FROM banquet_type_dist) AS banquet_type
@@ -441,6 +452,9 @@ export async function getDashboardData(
     ),
     event_type_by_location: eventTypeByLocationFromRows(
       row?.event_type_by_location ?? []
+    ),
+    resv_count_by_locations: resvCountByLocationFromRows(
+      row?.resv_count_by_locations ?? []
     ),
     party_size: partySizeFromRows(row?.party_size ?? []),
     booking_channel: breakdownFromRows(

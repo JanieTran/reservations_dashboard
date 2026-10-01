@@ -26,6 +26,7 @@ import type {
   KpiRow,
   PartySizePoint,
   PartySizeRow,
+  ReservationCountByLocationRow,
   TableUtilisationHeatmapData,
   TableUtilisationRow,
 } from "./dashboard-types";
@@ -168,6 +169,15 @@ export function partySizeFromRows(rows: PartySizeRow[]): PartySizePoint[] {
   return rows.map((row) => ({
     banquet_type: row.banquet_type ?? "Unknown",
     average_party_size: toNumber(row.average_party_size),
+  }));
+}
+
+export function resvCountByLocationFromRows(
+  rows: ReservationCountByLocationRow[]
+): BreakdownPoint[] {
+  return rows.map((row) => ({
+    label: String(row.service_location_name ?? "Unknown"),
+    reservations: toNumber(row.reservations),
   }));
 }
 

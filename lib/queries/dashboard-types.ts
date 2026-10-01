@@ -50,6 +50,11 @@ export interface PartySizeRow {
   average_party_size: string;
 }
 
+export interface ReservationCountByLocationRow {
+  service_location_name?: string | null;
+  reservations: number | string | null;
+}
+
 export interface BookingChannelRateRow {
   booking_channel: string;
   cancel_or_no_show_rate: number | string | null;
@@ -207,6 +212,7 @@ export interface DashboardQueryRow {
   heatmap: HeatmapRow[] | null;
   table_utilisation_heatmap: TableUtilisationRow[] | null;
   event_type_by_location: EventTypeByLocationRow[] | null;
+  resv_count_by_locations: ReservationCountByLocationRow[] | null;
   party_size: PartySizeRow[] | null;
   booking_channel: BreakdownRow[] | null;
   banquet_type: BreakdownRow[] | null;
@@ -230,6 +236,7 @@ export interface DashboardData {
   heatmap: HeatmapPoint[];
   table_utilisation_heatmap: TableUtilisationHeatmapData;
   event_type_by_location: EventTypeByLocationPoint[];
+  resv_count_by_locations: BreakdownPoint[];
   party_size: PartySizePoint[];
   booking_channel: BreakdownPoint[];
   banquet_type: BreakdownPoint[];
