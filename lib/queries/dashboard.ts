@@ -187,6 +187,7 @@ const DASHBOARD_SQL = `
   ,event_type_by_location AS (
     SELECT
       service_location_name
+      ,COUNT(*) AS total_bookings
       ,COUNT(*) FILTER (WHERE event_type = 'Banquet') AS banquet_count
       ,COUNT(*) FILTER (WHERE event_type = 'Dine In') AS dine_in_count
       ,ROUND(
@@ -199,16 +200,6 @@ const DASHBOARD_SQL = `
         , 2) AS dine_in_rate
     FROM filtered_bookings
     WHERE event_type IS NOT NULL
-      AND period = 'current'
-    GROUP BY 1
-  )
-  ,service_locations AS (
-    SELECT
-      service_location_name
-      ,COUNT(*) AS reservations
-    FROM filtered_bookings
-    WHERE service_location_name IS NOT NULL
-      AND TRIM(service_location_name) <> ''
       AND period = 'current'
     GROUP BY 1
   )
@@ -400,7 +391,7 @@ const DASHBOARD_SQL = `
     ,(SELECT json_agg(daily ORDER BY date) FROM daily) AS daily
     ,(SELECT json_agg(heatmap ORDER BY weekday, hour) FROM heatmap) AS heatmap
     ,(SELECT json_agg(table_utilisation_heatmap ORDER BY booking_date) FROM table_utilisation_heatmap) AS table_utilisation_heatmap
-    ,(SELECT json_agg(event_type_by_location ORDER BY banquet_rate DESC) FROM event_type_by_location) AS event_type_by_location
+    ,(SELECT json_agg(event_type_by_location ORDER BY total_bookings DESC) FROM event_type_by_location) AS event_type_by_location
     ,(SELECT json_agg(resv_count_by_locations ORDER BY reservations DESC) FROM resv_count_by_locations) AS resv_count_by_locations
     ,(SELECT json_agg(party_size ORDER BY average_party_size) FROM party_size) AS party_size
     ,(SELECT json_agg(booking_channels ORDER BY reservations DESC) FROM booking_channels) AS booking_channel
@@ -414,7 +405,6 @@ const DASHBOARD_SQL = `
     ,(SELECT json_agg(cancel_reasons_count ORDER BY reservations DESC) FROM cancel_reasons_count) AS cancel_reasons_count
     ,(SELECT json_agg(customer_types_by_location ORDER BY returning_rate DESC) FROM customer_types_by_location) AS customer_type
     ,(SELECT json_agg(customer_types_by_channel ORDER BY returning_rate DESC) FROM customer_types_by_channel) AS customer_type_by_channel
-    ,(SELECT json_agg(service_locations ORDER BY reservations DESC, service_location_name) FROM service_locations) AS service_location
     ,(SELECT json_agg(booking_customer_genders ORDER BY female_rate DESC) FROM booking_customer_genders) AS booking_customer_gender
     ,(SELECT json_agg(customer_nationality ORDER BY vietnamese_rate DESC) FROM customer_nationality) AS customer_nationality
 `;
@@ -496,10 +486,6 @@ export async function getDashboardData(
     ),
     customer_nationality: customerNationalityFromRows(
       row?.customer_nationality ?? []
-    ),
-    service_location: breakdownFromRows(
-      row?.service_location ?? [],
-      "service_location_name"
     ),
     booking_customer_gender: bookingCustomerGenderFromRows(
       row?.booking_customer_gender ?? []

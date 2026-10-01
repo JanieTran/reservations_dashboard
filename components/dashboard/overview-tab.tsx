@@ -110,10 +110,15 @@ export default function OverviewTab({ data }: OverviewTabProps) {
           rowLabelAlign="end"
           className="lg:row-span-2"
         />
-        <DonutChart
-          title="Service Location"
-          description="Bookings by service location"
-          data={data.service_location}
+        <StackedBarCard
+          title="Bookings by Location"
+          description="Booking counts by banquet and dine-in at each service location"
+          data={data.event_type_by_location}
+          xKey="service_location_name"
+          stackKeys={["banquet_count", "dine_in_count"]}
+          stackLabels={{ banquet_count: "Banquet", dine_in_count: "Dine In" }}
+          valueMode="count"
+          layout="horizontal"
         />
         <HeatmapCard
           title="Table Utilisation Heatmap"
@@ -126,17 +131,7 @@ export default function OverviewTab({ data }: OverviewTabProps) {
           rowHeaderWidth="9rem"
           columnWidth="2.75rem"
           scrollable
-        />
-        <StackedBarCard
-          title="Event Type by Location"
-          description="Share of banquet and dine-in bookings by service location"
-          data={data.event_type_by_location}
-          xKey="service_location_name"
-          stackKeys={["banquet_rate", "dine_in_rate"]}
-          stackLabels={{ banquet_rate: "Banquet", dine_in_rate: "Dine In" }}
-          valueMode="percent"
-          yDomain={[0, 100]}
-          layout="horizontal"
+          className="lg:col-span-2"
         />
       </section>
     </div>

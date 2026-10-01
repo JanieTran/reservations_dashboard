@@ -26,6 +26,7 @@ export interface TableUtilisationRow {
 
 export interface EventTypeByLocationRow {
   service_location_name?: string;
+  total_bookings?: number | string | null;
   banquet_count?: number | string | null;
   dine_in_count?: number | string | null;
   banquet_rate?: number | string | null;
@@ -133,6 +134,7 @@ export interface TableUtilisationHeatmapData {
 export interface EventTypeByLocationPoint {
   [key: string]: string | number | undefined;
   service_location_name: string;
+  total_bookings: number;
   banquet_count: number;
   dine_in_count: number;
   banquet_rate: number;
@@ -226,7 +228,6 @@ export interface DashboardQueryRow {
   customer_type: CustomerTypeRow[] | null;
   customer_type_by_channel: CustomerTypeRow[] | null;
   customer_nationality: CustomerNationalityRow[] | null;
-  service_location: BreakdownRow[] | null;
   booking_customer_gender: BookingCustomerGenderRow[] | null;
 }
 
@@ -251,7 +252,6 @@ export interface DashboardData {
   customer_type: CustomerTypeLocationPoint[];
   customer_type_by_channel: CustomerTypeChannelPoint[];
   customer_nationality: CustomerNationalityPoint[];
-  service_location: BreakdownPoint[];
   booking_customer_gender: BookingCustomerGenderPoint[];
 }
 
