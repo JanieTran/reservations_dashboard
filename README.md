@@ -1,8 +1,8 @@
-# Restaurant Reservation Analytics Dashboard
+# Restaurant Analytics Dashboard
 
-A modern web application for visualising restaurant reservation data through interactive dashboards and business intelligence reports.
+A modern web application for visualising restaurant data through interactive dashboards and business intelligence reports.
 
-The dashboard is designed for restaurant owners and managers to monitor reservation trends, customer behaviour, and operational performance. It demonstrates full-stack web development, SQL analytics, and data visualisation using a modern TypeScript stack.
+The dashboard is designed for restaurant owners and managers to monitor trends, customer behaviour, and operational performance. It demonstrates full-stack web development, SQL analytics, and data visualisation using a modern TypeScript stack.
 
 ---
 
@@ -10,28 +10,23 @@ The dashboard is designed for restaurant owners and managers to monitor reservat
 
 ### Authentication
 
-- Log in with PostgreSQL database credentials (username and password are entered in the login form, never stored)
-- Credentials are encrypted into a 7-day HttpOnly session cookie using AES-256-GCM
+- Log in with PostgreSQL database credentials
+- Credentials are encrypted into a 7-day HttpOnly session cookie using AES-256-GCM; they are not stored in environment variables
 - The login page redirects to the dashboard when already authenticated; the dashboard redirects to `/login` otherwise
 - Log out clears the session
 
-### Executive Overview
+### Dashboard Controls
 
-- KPI cards for reservations, guests, average party size, cancellation rate, and no-show rate
-- Each card compares the current period against the previous period
-  - Counts (reservations, guests) show percentage change
-  - Rates show percentage-point change
-  - Deltas are coloured emerald or red depending on whether the move is good or bad for the business
+- Choose an active merchant; the selected merchant is used for dashboard queries and retained when switching tabs or date ranges.
+- Choose the current week, month, quarter, or year-to-date, or the last complete week, month, quarter, or year
+- Compare each selected period with the preceding equivalent period
 
-### Reservation Analytics
+### Dashboard Sections
 
-- Reservations / guests trend line chart with a metric toggle
-- Reservation heatmap by hour × day of week with a grayscale intensity legend
-
-### Customer Insights
-
-- Party size distribution bar chart
-- Donut charts for booking source, customer type, and customer gender
+- **Overview:** KPI comparison, daily trend, booking heatmap, bookings by location, and table utilisation.
+- **Reservations:** Location, source, and banquet-type breakdowns; party size, weekday, and lead-time charts.
+- **Cancellation:** Cancellation/no-show rates and reason counts.
+- **Customers:** Customer type, nationality, and reservation-holder gender breakdowns.
 
 ---
 
@@ -67,19 +62,20 @@ Browser
 Login (DB credentials)
     │
     ▼
-Next.js App Router
-(Server Components)
+Next.js App Router (Server Components)
     │
     ▼
-Single SQL query
-(CTEs + json_build_object)
+Session-backed PostgreSQL queries
+  ├─ Active merchant options
+  └─ Dashboard aggregates (CTEs + json_agg)
     │
     ▼
 PostgreSQL
 ```
 
-- The dashboard loads with a single combined SQL query: common-table expressions filter bookings and aggregate all sections (KPI summary, daily trend, heatmap, party size, and breakdowns), then `json_build_object` returns them in one payload.
-- Server Components call `getDashboardData()`, which runs the query with the logged-in user's database credentials and parses each section into typed data.
+- The server loads active merchant options, then runs one combined dashboard query for the selected merchant and date range.
+- The dashboard query uses common-table expressions to aggregate KPIs, trends, heatmaps, reservations, cancellations, and customer insights. Each section is returned as a separate `json_agg` result column.
+- Server Components call `getDashboardData()`, which runs the parameterized query with the logged-in user's database credentials and parses each section into typed data.
 - React Client Components render interactive charts from that typed data.
 - No separate backend service is required.
 
@@ -92,50 +88,28 @@ restaurant-reservations/
 │
 ├── app/
 │   ├── api/auth/            # Login / logout API routes
-│   ├── login/               # Login page (server guard + client form)
+│   ├── login/               # Login page and client form
 │   ├── layout.tsx
 │   ├── globals.css
-│   └── page.tsx             # Dashboard page
+│   └── page.tsx             # Dashboard route and query parameter validation
 │
 ├── components/
 │   ├── dashboard/           # Dashboard tabs, shell, sidebar, and KPI grid
-│   ├── charts/              # Reusable charts, heatmaps, and KPI card
+│   ├── charts/              # Reusable chart, heatmap, and KPI components
 │   └── ui/                  # shadcn/ui primitives
 │
 ├── lib/
-│   ├── db.ts                # Per-request pg client + debug logging
-│   ├── session.ts           # Session cookie encryption / auth helpers
-│   ├── ranges.ts            # Date ranges and date formatting
+│   ├── db.ts                # Session-backed PostgreSQL query helper
+│   ├── session.ts           # Encrypted session cookie and DB connection helpers
+│   ├── ranges.ts            # Current and last-period date range calculations
 │   ├── delta.ts             # Delta computation for KPI comparisons
 │   ├── format.ts            # Number / percentage formatting
 │   ├── utils.ts             # cn() helper
-│   └── queries/             # SQL + parsers per dashboard section
+│   └── queries/             # Dashboard SQL, raw row types, and parsers
 │
 ├── wireframe.txt            # Design reference for planned sections
 │
 └── README.md
-```
-
----
-
-## Dashboard Layout
-
-```
-+-------------------------------------------------------------+
-| KPI Cards: Reservations · Guests · Avg Party · Cancellation │
-|            Rate · No-show Rate                              │
-+-------------------------------------------------------------+
-
-+-----------------------------+-------------------------------+
-| Reservations / Guests Trend | Reservation Heatmap           |
-+-----------------------------+  (spanning 2 rows)            |
-| Party Size Distribution     |                               |
-+-----------------------------+-------------------------------+
-
-+--------------------------+--------------------------+---------+
-| Booking Source (donut)   | Customer Type (donut)    | Customer|
-|                          |                          | Gender  |
-+--------------------------+--------------------------+---------+
 ```
 
 ---
@@ -152,21 +126,7 @@ Examples include:
 - Date/time bucketing
 - Joins
 
-The frontend receives datasets already shaped for visualisation via a single `json_build_object` payload:
-
-```json
-{
-  "kpi": [...],
-  "daily": [...],
-  "heatmap": [...],
-  "party_size": [...],
-  "booking_channel": [...],
-  "customer_type": [...],
-  "booking_customer_gender": [...]
-}
-```
-
-instead of raw reservation records.
+The dashboard query returns section aggregates as separate JSON columns, shaped for visualisation rather than exposing raw reservation records.
 
 ---
 
@@ -222,7 +182,7 @@ Set `SQL_DEBUG=1` in `.env.local` to log every query, its parameters, and its ro
 - Prioritise business insights over decorative charts.
 - Perform heavy data processing in SQL.
 - Minimise frontend data transformation.
-- Optimise for fast dashboard loading (single query per page load).
+- Keep dashboard aggregates in one query; load merchant options separately.
 - Build reusable components.
 
 ---
