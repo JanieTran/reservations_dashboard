@@ -1,4 +1,4 @@
-import StackedBarCard from "@/components/dashboard/stacked-bar-chart-card";
+import StackedBarCard from "@/components/charts/stacked-bar-chart-card";
 import type { DashboardData } from "@/lib/queries/dashboard";
 
 interface CustomersTabProps {

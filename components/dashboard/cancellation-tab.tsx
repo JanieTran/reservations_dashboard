@@ -1,4 +1,4 @@
-import BarChartCard from "@/components/dashboard/bar-chart-card";
+import BarChartCard from "@/components/charts/bar-chart-card";
 import type { DashboardData } from "@/lib/queries/dashboard";
 
 interface CancellationTabProps {

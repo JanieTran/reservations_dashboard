@@ -1,11 +1,11 @@
 import HeatmapCard, {
   type HeatmapColumn,
   type HeatmapRow as HeatmapGridRow,
-} from "@/components/dashboard/heatmap-card";
-import DailyTrend from "@/components/dashboard/daily-trend";
-import DonutChart from "@/components/dashboard/donut-chart";
+} from "@/components/charts/heatmap-card";
+import DailyTrend from "@/components/charts/daily-trend";
+import DonutChart from "@/components/charts/donut-chart";
 import KpiGrid from "@/components/dashboard/kpi-grid";
-import StackedBarCard from "@/components/dashboard/stacked-bar-chart-card";
+import StackedBarCard from "@/components/charts/stacked-bar-chart-card";
 import type { DashboardData } from "@/lib/queries/dashboard";
 import type {
   HeatmapPoint,

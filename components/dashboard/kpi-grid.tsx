@@ -2,7 +2,7 @@ import { buildDelta, type Delta, type DeltaKind } from "@/lib/delta";
 import { formatCount, formatPercent } from "@/lib/format";
 import type { KpiData, KpiPeriod } from "@/lib/queries/dashboard-types";
 
-import KpiCard from "./kpi-card";
+import KpiCard from "@/components/charts/kpi-card";
 
 // ---- types ----
 

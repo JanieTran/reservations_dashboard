@@ -1,5 +1,5 @@
-import BarChartCard from "@/components/dashboard/bar-chart-card";
-import DonutChart from "@/components/dashboard/donut-chart";
+import BarChartCard from "@/components/charts/bar-chart-card";
+import DonutChart from "@/components/charts/donut-chart";
 import type { DashboardData } from "@/lib/queries/dashboard";
 
 interface ReservationsTabProps {

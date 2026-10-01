@@ -98,7 +98,8 @@ restaurant-reservations/
 │   └── page.tsx             # Dashboard page
 │
 ├── components/
-│   ├── dashboard/           # Chart components (kpi, trend, heatmap, party size, donut)
+│   ├── dashboard/           # Dashboard tabs, shell, sidebar, and KPI grid
+│   ├── charts/              # Reusable charts, heatmaps, and KPI card
 │   └── ui/                  # shadcn/ui primitives
 │
 ├── lib/
