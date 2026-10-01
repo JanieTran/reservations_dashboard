@@ -10,7 +10,7 @@ export default function ReservationsTab({ data }: ReservationsTabProps) {
   return (
     <section className="grid min-w-0 gap-4 lg:grid-cols-3">
       <DonutChart
-        title="Booking Source"
+        title="Reservation Source"
         description="Reservations by booking source"
         data={data.booking_channel}
       />

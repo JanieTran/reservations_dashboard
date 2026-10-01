@@ -35,7 +35,7 @@ type StackedBarCardProps<T extends Record<string, unknown>> = {
   layout?: "vertical" | "horizontal";
 };
 
-const DEFAULT_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)"];
+const DEFAULT_COLORS = ["var(--chart-1)", "var(--chart-3)", "var(--chart-2)", "var(--chart-4)"];
 
 function toNumber(value: unknown): number {
   return Number(value ?? 0);

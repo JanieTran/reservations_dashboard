@@ -77,7 +77,7 @@ export default function DashboardSidebar({
                     "flex min-h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none",
                     isActive
                       ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                      : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      : "text-sidebar-foreground/75 hover:bg-muted hover:text-sidebar-accent-foreground"
                   )}
                 >
                   <Icon className="size-4" aria-hidden="true" />

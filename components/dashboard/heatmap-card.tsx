@@ -41,7 +41,7 @@ interface HeatmapCardProps {
 }
 
 function cellColor(intensity: number): string {
-  return `color-mix(in oklab, var(--foreground) ${intensity}%, var(--muted))`;
+  return `color-mix(in oklab, var(--primary) ${intensity}%, var(--muted))`;
 }
 
 export default function HeatmapCard({

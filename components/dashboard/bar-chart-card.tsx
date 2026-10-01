@@ -184,7 +184,7 @@ export default function BarChartCard<T extends object>({
               />
               <Bar
                 dataKey={valueKey}
-                fill={barColor ?? "var(--chart-2)"}
+                fill={barColor ?? "var(--chart-1)"}
                 radius={isHorizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]}
                 maxBarSize={maxBarSize ?? 48}
                 name={barName ?? valueKey}

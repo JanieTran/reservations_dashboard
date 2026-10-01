@@ -114,7 +114,7 @@ export default function DailyTrend({ data }: DailyTrendProps) {
                 type="monotone"
                 dataKey={currentKey}
                 name="Current"
-                stroke="var(--chart-2)"
+                stroke="var(--chart-1)"
                 strokeWidth={2.5}
                 dot={false}
                 activeDot={{ r: 4 }}
@@ -123,7 +123,7 @@ export default function DailyTrend({ data }: DailyTrendProps) {
                 type="monotone"
                 dataKey={previousKey}
                 name="Previous"
-                stroke="var(--chart-3)"
+                stroke="var(--chart-2)"
                 strokeWidth={2}
                 strokeDasharray="4 4"
                 strokeOpacity={0.7}

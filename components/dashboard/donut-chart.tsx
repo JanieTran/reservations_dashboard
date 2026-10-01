@@ -18,11 +18,11 @@ import {
 import type { BreakdownPoint } from "@/lib/queries/dashboard-types";
 
 const COLORS = [
-  "var(--chart-5)",
-  "var(--chart-4)",
-  "var(--chart-3)",
-  "var(--chart-2)",
   "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
 ];
 
 interface DonutChartProps {
