@@ -231,6 +231,11 @@ export interface DashboardQueryRow {
   booking_customer_gender: BookingCustomerGenderRow[] | null;
 }
 
+export interface MerchantOption {
+  merchant_id: string;
+  merchant_name: string;
+}
+
 export interface DashboardData {
   kpi: KpiData;
   daily: DailyPoint[];

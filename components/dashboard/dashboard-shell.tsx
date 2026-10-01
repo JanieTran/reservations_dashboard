@@ -13,11 +13,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toDateKey, type DateRange, type DateRangePreset } from "@/lib/ranges";
+import type { MerchantOption } from "@/lib/queries/dashboard-types";
 
 interface DashboardShellProps {
   activeTab: DashboardTab;
   period: DateRangePreset;
   dateRange: DateRange;
+  merchants: MerchantOption[];
+  selectedMerchantId: string | null;
   children: ReactNode;
 }
 
@@ -76,11 +79,18 @@ export default function DashboardShell({
   activeTab,
   period,
   dateRange,
+  merchants,
+  selectedMerchantId,
   children,
 }: DashboardShellProps) {
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-background lg:flex-row">
-      <DashboardSidebar activeTab={activeTab} period={period} />
+      <DashboardSidebar
+        activeTab={activeTab}
+        period={period}
+        merchants={merchants}
+        selectedMerchantId={selectedMerchantId}
+      />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="flex shrink-0 flex-col gap-4 border-b border-border px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <h1 className="text-xl font-bold tracking-tight sm:text-2xl">

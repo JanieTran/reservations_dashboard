@@ -13,7 +13,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getDashboardData, type DashboardData } from "@/lib/queries/dashboard";
+import {
+  getDashboardData,
+  getMerchants,
+  type DashboardData,
+  type MerchantOption,
+} from "@/lib/queries/dashboard";
 import {
   getDateRange,
   isDateRangePreset,
@@ -22,7 +27,7 @@ import {
 import { getSession } from "@/lib/session";
 
 interface DashboardPageProps {
-  searchParams: Promise<{ tab?: string; period?: string }>;
+  searchParams: Promise<{ tab?: string; period?: string; merchant_id?: string }>;
 }
 
 function isDashboardTab(value: string | undefined): value is DashboardTab {
@@ -52,15 +57,34 @@ export default async function DashboardPage({
     : "month";
   const dateRange = getDateRange(period);
 
-  let dashboard: DashboardData | null;
+  let merchants: MerchantOption[] = [];
+  let selectedMerchantId: string | null = null;
+  let dashboard: DashboardData | null = null;
   try {
-    dashboard = await getDashboardData(dateRange);
+    merchants = await getMerchants();
+    selectedMerchantId =
+      merchants.find((merchant) => merchant.merchant_id === params.merchant_id)
+        ?.merchant_id ??
+      merchants.find((merchant) => merchant.merchant_name === "Zumstart")
+        ?.merchant_id ??
+      merchants[0]?.merchant_id ??
+      null;
+
+    if (selectedMerchantId) {
+      dashboard = await getDashboardData(dateRange, selectedMerchantId);
+    }
   } catch {
     dashboard = null;
   }
 
   return (
-    <DashboardShell activeTab={activeTab} period={period} dateRange={dateRange}>
+    <DashboardShell
+      activeTab={activeTab}
+      period={period}
+      dateRange={dateRange}
+      merchants={merchants}
+      selectedMerchantId={selectedMerchantId}
+    >
       {dashboard ? (
         activeTab === "overview" ? (
           <OverviewTab data={dashboard} />

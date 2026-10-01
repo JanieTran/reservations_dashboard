@@ -19,9 +19,28 @@ import {
   resvCountByLocationFromRows,
   tableUtilisationHeatmapFromRows,
 } from "./dashboard-parsers";
-import type { DashboardData, DashboardQueryRow } from "./dashboard-types";
+import type {
+  DashboardData,
+  DashboardQueryRow,
+  MerchantOption,
+} from "./dashboard-types";
 
-export type { DashboardData } from "./dashboard-types";
+export type { DashboardData, MerchantOption } from "./dashboard-types";
+
+type MerchantQueryRow = QueryResultRow & MerchantOption;
+
+export async function getMerchants(): Promise<MerchantOption[]> {
+  const result = await query<MerchantQueryRow>(`
+    SELECT
+      id::text AS merchant_id,
+      name AS merchant_name
+    FROM public.merchants
+    WHERE status = 'active'
+    ORDER BY name
+  `);
+
+  return result.rows;
+}
 
 // ---- query ----
 
@@ -140,7 +159,7 @@ const DASHBOARD_SQL = `
     WHERE
       BK.is_test = FALSE
       AND DATE(BK.reserved_at + INTERVAL '7 hours') BETWEEN $3 AND $2
-      AND BK.merchant_id = '23352246-f1a6-41b1-b115-ff89f08989e6'
+      AND BK.merchant_id = $5
   )
   ,daily AS (
     SELECT
@@ -418,7 +437,8 @@ const DASHBOARD_SQL = `
  * typed data. Missing sections are returned as empty/zeroed fallbacks.
  */
 export async function getDashboardData(
-  range: DateRange
+  range: DateRange,
+  merchantId: string
 ): Promise<DashboardData> {
   // The range ends are the inclusive last days of each period, matching the
   // SQL's inclusive BETWEEN.
@@ -428,6 +448,7 @@ export async function getDashboardData(
       toDateKey(range.currentEnd),
       toDateKey(range.previousStart),
       toDateKey(range.previousEnd),
+      merchantId,
     ])
   ).rows[0];
 
